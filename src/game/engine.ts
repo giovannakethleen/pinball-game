@@ -44,6 +44,11 @@ const segs: Seg[] = [
   // small slingshots
   { ax: 60, ay: 470, bx: 100, by: 540 },
   { ax: 305, ay: 470, bx: 265, by: 540 },
+  // top rollover lane posts
+  { ax: 125, ay: 22, bx: 125, by: 58 },
+  { ax: 175, ay: 22, bx: 175, by: 58 },
+  { ax: 225, ay: 22, bx: 225, by: 58 },
+  { ax: 275, ay: 22, bx: 275, by: 58 },
 ];
 
 export class PinballGame {
@@ -53,7 +58,14 @@ export class PinballGame {
   inLane = true;
   gate = false;
   ramp = -1;
-  rampPath: [number, number][] = [[45, 440], [32, 330], [34, 220], [55, 120], [110, 62], [180, 52], [235, 70]];
+  ri = 0;
+  ramps: { path: [number, number][]; pts: number; color: string; label: string; dur: number }[] = [
+    { path: [[45, 440], [32, 330], [34, 220], [55, 120], [110, 62], [180, 52], [235, 70]], pts: 1000, color: "rgba(167,139,250,0.55)", label: "RAMPA", dur: 0.9 },
+    { path: [[325, 335], [345, 240], [342, 150], [315, 105], [285, 125], [290, 230], [310, 380], [300, 500], [282, 560]], pts: 1500, color: "rgba(244,114,182,0.45)", label: "BURACO DE MINHOCA", dur: 1.2 },
+  ];
+  hole = { x: 200, y: 505, t: -1, cd: 0 };
+  lanes = [{ x: 150, lit: false }, { x: 200, lit: false }, { x: 250, lit: false }];
+  laneCd = 0;
   balls = 3;
   score = 0;
   mult = 1;
@@ -180,14 +192,15 @@ export class PinballGame {
     }
 
     if (this.ramp >= 0) {
-      this.ramp += dt / 0.9;
-      const pts = this.rampPath, n = pts.length - 1;
+      const rm = this.ramps[this.ri]!;
+      this.ramp += dt / rm.dur;
+      const pts = rm.path, n = pts.length - 1;
       if (this.ramp >= 1) {
         this.ramp = -1;
         const [ax, ay] = pts[n - 1]!, [bx, by] = pts[n]!;
         const l = Math.hypot(bx - ax, by - ay);
         this.bx = bx; this.by = by; this.vx = ((bx - ax) / l) * 500; this.vy = ((by - ay) / l) * 500;
-        this.addScore(1000, bx, by - 15); this.burst(bx, by, COLORS.glow, 30); this.ev.onSound("bonus");
+        this.addScore(rm.pts, bx, by - 15); this.pops.push({ x: 200, y: 330, t: rm.label + "!", life: 1.2 }); this.burst(bx, by, COLORS.glow, 30); this.ev.onSound("bonus");
       } else {
         const f = this.ramp * n, i = Math.floor(f), k = f - i;
         const p0 = pts[i]!, p1 = pts[i + 1]!;
@@ -197,8 +210,38 @@ export class PinballGame {
       }
       return;
     }
-    if (this.vy < -150 && Math.hypot(this.bx - this.rampPath[0]![0], this.by - this.rampPath[0]![1]) < 20) {
-      this.ramp = 0; this.ev.onSound("launch"); return;
+    for (let i = 0; i < this.ramps.length; i++) {
+      const e0 = this.ramps[i]!.path[0]!;
+      if (this.vy < -120 && Math.hypot(this.bx - e0[0], this.by - e0[1]) < 20) {
+        this.ramp = 0; this.ri = i; this.ev.onSound("launch"); return;
+      }
+    }
+    // black hole
+    const h = this.hole;
+    h.cd = Math.max(0, h.cd - dt);
+    if (h.t >= 0) {
+      h.t += dt;
+      this.bx = h.x + Math.cos(h.t * 18) * 10 * (1 - h.t); this.by = h.y + Math.sin(h.t * 18) * 10 * (1 - h.t);
+      if (h.t > 0.9) {
+        h.t = -1; h.cd = 1.5;
+        const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.2;
+        this.vx = Math.cos(a) * 900; this.vy = Math.sin(a) * 900;
+        this.addScore(2000, h.x, h.y - 25); this.burst(h.x, h.y, COLORS.glow, 40); this.ev.onSound("bonus");
+        this.pops.push({ x: 200, y: 330, t: "BURACO NEGRO!", life: 1.2 });
+      }
+      return;
+    }
+    if (h.cd <= 0 && Math.hypot(this.bx - h.x, this.by - h.y) < 16) { h.t = 0; this.ev.onSound("star"); return; }
+    // top lanes
+    this.laneCd = Math.max(0, this.laneCd - dt);
+    if (this.by < 50 && this.laneCd <= 0) {
+      const ln = this.lanes.find((l) => Math.abs(this.bx - l.x) < 18);
+      if (ln && !ln.lit) { ln.lit = true; this.laneCd = 0.3; this.addScore(300, ln.x, 70); this.ev.onSound("star"); }
+      if (this.lanes.every((l) => l.lit)) {
+        this.lanes.forEach((l) => (l.lit = false));
+        this.addScore(3000, 200, 80); this.pops.push({ x: 200, y: 330, t: "GALÁXIA COMPLETA!", life: 1.4 });
+        this.burst(200, 40, COLORS.star, 40); this.ev.onSound("bonus");
+      }
     }
     if (!this.gate && this.bx < 345) this.gate = true;
     this.vy += G * dt;
@@ -209,7 +252,7 @@ export class PinballGame {
 
     for (const s of segs) this.collideSeg(s.ax, s.ay, s.bx, s.by, 2, 0.5);
     if (this.gate) this.collideSeg(355, 160, 390, 118, 3, 0.5);
-    segs.slice(9).forEach((s) => {
+    segs.slice(9, 11).forEach((s) => {
       if (this.collideSeg(s.ax, s.ay, s.bx, s.by, 2, 0) ) {
         const nx = -(s.by - s.ay), ny = s.bx - s.ax, l = Math.hypot(nx, ny);
         const dir = (this.bx - s.ax) * nx + (this.by - s.ay) * ny > 0 ? 1 : -1;
@@ -290,14 +333,33 @@ export class PinballGame {
 
     this.glowStroke(() => { for (const s of segs) { c.beginPath(); c.moveTo(s.ax, s.ay); c.lineTo(s.bx, s.by); c.stroke(); } }, COLORS.wall, 4);
 
-    // ramp
-    const rp = this.rampPath;
+    // black hole
+    const h = this.hole;
+    for (let i = 5; i > 0; i--) {
+      c.strokeStyle = `rgba(216,180,254,${0.12 * i})`; c.lineWidth = 2;
+      c.beginPath(); c.arc(h.x, h.y, 10 + i * 9 + Math.sin(this.t * 3 + i) * 2, this.t * i, this.t * i + 4.5); c.stroke();
+    }
+    const hg = c.createRadialGradient(h.x, h.y, 2, h.x, h.y, 22);
+    hg.addColorStop(0, "#000"); hg.addColorStop(0.7, "#1e0636"); hg.addColorStop(1, "rgba(192,132,252,0.8)");
+    c.fillStyle = hg; c.beginPath(); c.arc(h.x, h.y, 20, 0, 7); c.fill();
+    // top lanes
+    for (const l of this.lanes) {
+      c.fillStyle = l.lit ? COLORS.star : "rgba(255,255,255,0.2)"; c.shadowColor = COLORS.star; c.shadowBlur = l.lit ? 16 : 0;
+      c.beginPath(); c.arc(l.x, 40, 6, 0, 7); c.fill(); c.shadowBlur = 0;
+    }
+    // ramps
     c.lineJoin = "round"; c.lineCap = "round";
-    c.strokeStyle = "rgba(167,139,250,0.55)"; c.lineWidth = 30;
-    c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke();
-    this.glowStroke(() => { c.lineWidth = 3; c.setLineDash([10, 8]); c.lineDashOffset = -this.t * 40; c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); c.setLineDash([]); }, COLORS.star, 3);
-    c.fillStyle = COLORS.glow; c.beginPath(); c.arc(rp[0]![0], rp[0]![1], 14, 0, 7); c.fill();
-    c.fillStyle = "#fff"; c.font = "bold 10px Fredoka, sans-serif"; c.textAlign = "center"; c.fillText("▲", rp[0]![0], rp[0]![1] + 4);
+    for (const rm of this.ramps) {
+      const rp = rm.path;
+      c.strokeStyle = rm.color; c.lineWidth = 28;
+      c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke();
+      c.strokeStyle = "rgba(255,255,255,0.35)"; c.lineWidth = 1.5;
+      c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x - 13, y) : c.moveTo(x - 13, y))); c.stroke();
+      c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x + 13, y) : c.moveTo(x + 13, y))); c.stroke();
+      this.glowStroke(() => { c.lineWidth = 3; c.setLineDash([10, 8]); c.lineDashOffset = -this.t * 40; c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); c.setLineDash([]); }, COLORS.star, 3);
+      c.fillStyle = COLORS.glow; c.beginPath(); c.arc(rp[0]![0], rp[0]![1], 14, 0, 7); c.fill();
+      c.fillStyle = "#fff"; c.font = "bold 10px Fredoka, sans-serif"; c.textAlign = "center"; c.fillText("▲", rp[0]![0], rp[0]![1] + 4);
+    }
     if (this.gate) this.glowStroke(() => { c.beginPath(); c.moveTo(355, 160); c.lineTo(390, 118); c.stroke(); }, COLORS.accentGate, 4);
 
     for (const b of this.bumpers) {
