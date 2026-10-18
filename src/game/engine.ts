@@ -109,8 +109,8 @@ export class PinballGame {
   stop() { cancelAnimationFrame(this.raf); }
 
   flip(i: 0 | 1, on: boolean) {
-    if (on && !this.fl[i].on) this.ev.onSound("flip");
-    this.fl[i].on = on;
+    if (on && !this.fl[i]!.on) this.ev.onSound("flip");
+    this.fl[i]!.on = on;
   }
   setCharging(on: boolean) {
     if (!this.inLane || this.over || this.paused) { this.charging = false; return; }
