@@ -122,7 +122,7 @@ body { font-family: var(--font-sans); }
 .btn-cosmic:active { transform: translateY(2px); }
 .btn-ghost { border-radius: 999px; padding: .75rem 1.5rem; font-weight: 600; border: 2px solid var(--border); background: var(--secondary); transition: background .15s; }
 .btn-ghost:hover { background: var(--muted); }
-.score-box { font-family: var(--font-display); font-size: 2.5rem; text-align: center; color: var(--star); background: oklch(0.15 0.06 300); border-radius: var(--radius); padding: .5rem; text-shadow: 0 0 12px var(--star); letter-spacing: .1em; }
+.score-box { font-family: var(--font-display); font-size: 2rem; text-align: center; color: var(--star); background: oklch(0.15 0.06 300); border-radius: var(--radius); padding: .5rem; text-shadow: 0 0 12px var(--star); letter-spacing: .1em; }
 .stat { background: oklch(0.18 0.07 300 / .7); border-radius: var(--radius); padding: .6rem .9rem; }
 @keyframes float { 0%,100% { transform: translateY(0) rotate(-6deg) } 50% { transform: translateY(-10px) rotate(6deg) } }
 .float { animation: float 3s ease-in-out infinite; display: inline-block; }
