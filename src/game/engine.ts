@@ -22,6 +22,7 @@ export type GameEvents = {
 const COLORS = {
   wall: "#e9c8ff",
   glow: "#c084fc",
+  accentGate: "#f472b6",
   planet: ["#f0abfc", "#a855f7"],
   moon: ["#fde68a", "#f59e0b"],
   star: "#fff7ae",
@@ -50,6 +51,9 @@ export class PinballGame {
   ev: GameEvents;
   bx = 372; by = 680; vx = 0; vy = 0;
   inLane = true;
+  gate = false;
+  ramp = -1;
+  rampPath: [number, number][] = [[45, 440], [32, 330], [34, 220], [55, 120], [110, 62], [180, 52], [235, 70]];
   balls = 3;
   score = 0;
   mult = 1;
@@ -116,6 +120,7 @@ export class PinballGame {
       this.vy = -(900 + this.charge * 900);
       this.charge = 0;
       this.inLane = false;
+      this.gate = false;
       this.ev.onSound("launch");
     }
   }
@@ -174,6 +179,27 @@ export class PinballGame {
       return;
     }
 
+    if (this.ramp >= 0) {
+      this.ramp += dt / 0.9;
+      const pts = this.rampPath, n = pts.length - 1;
+      if (this.ramp >= 1) {
+        this.ramp = -1;
+        const [ax, ay] = pts[n - 1], [bx, by] = pts[n];
+        const l = Math.hypot(bx - ax, by - ay);
+        this.bx = bx; this.by = by; this.vx = ((bx - ax) / l) * 500; this.vy = ((by - ay) / l) * 500;
+        this.addScore(1000, bx, by - 15); this.burst(bx, by, COLORS.glow, 30); this.ev.onSound("bonus");
+      } else {
+        const f = this.ramp * n, i = Math.floor(f), k = f - i;
+        this.bx = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * k;
+        this.by = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * k;
+        if (Math.random() < 0.5) this.parts.push({ x: this.bx, y: this.by, vx: 0, vy: 0, life: 0.4, c: COLORS.star });
+      }
+      return;
+    }
+    if (this.vy < -150 && Math.hypot(this.bx - this.rampPath[0][0], this.by - this.rampPath[0][1]) < 20) {
+      this.ramp = 0; this.ev.onSound("launch"); return;
+    }
+    if (!this.gate && this.bx < 345) this.gate = true;
     this.vy += G * dt;
     this.vx *= 1 - 0.15 * dt; this.vy *= 1 - 0.05 * dt;
     const sp = Math.hypot(this.vx, this.vy);
@@ -181,6 +207,7 @@ export class PinballGame {
     this.bx += this.vx * dt; this.by += this.vy * dt;
 
     for (const s of segs) this.collideSeg(s.ax, s.ay, s.bx, s.by, 2, 0.5);
+    if (this.gate) this.collideSeg(355, 160, 390, 118, 3, 0.5);
     segs.slice(9).forEach((s) => {
       if (this.collideSeg(s.ax, s.ay, s.bx, s.by, 2, 0) ) {
         const nx = -(s.by - s.ay), ny = s.bx - s.ax, l = Math.hypot(nx, ny);
@@ -223,8 +250,6 @@ export class PinballGame {
       }
     }
 
-    // back in lane -> ready for relaunch
-    if (this.bx > 355 && this.by > 690 - R && Math.abs(this.vy) < 60) this.inLane = true;
 
     if (this.by > H + 30) {
       this.balls -= 1;
@@ -233,7 +258,7 @@ export class PinballGame {
       this.ev.onScore(this.score, this.mult);
       this.ev.onSound("lose");
       if (this.balls <= 0) { this.over = true; this.ev.onGameOver(this.score); }
-      else this.inLane = true;
+      else { this.inLane = true; this.gate = false; }
     }
   }
 
@@ -263,6 +288,16 @@ export class PinballGame {
     c.beginPath(); c.ellipse(200, 230, 130, 70, 0, 0, 7); c.stroke(); c.setLineDash([]);
 
     this.glowStroke(() => { for (const s of segs) { c.beginPath(); c.moveTo(s.ax, s.ay); c.lineTo(s.bx, s.by); c.stroke(); } }, COLORS.wall, 4);
+
+    // ramp
+    const rp = this.rampPath;
+    c.lineJoin = "round"; c.lineCap = "round";
+    c.strokeStyle = "rgba(167,139,250,0.55)"; c.lineWidth = 30;
+    c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke();
+    this.glowStroke(() => { c.lineWidth = 3; c.setLineDash([10, 8]); c.lineDashOffset = -this.t * 40; c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); c.setLineDash([]); }, COLORS.star, 3);
+    c.fillStyle = COLORS.glow; c.beginPath(); c.arc(rp[0][0], rp[0][1], 14, 0, 7); c.fill();
+    c.fillStyle = "#fff"; c.font = "bold 10px Fredoka, sans-serif"; c.textAlign = "center"; c.fillText("▲", rp[0][0], rp[0][1] + 4);
+    if (this.gate) this.glowStroke(() => { c.beginPath(); c.moveTo(355, 160); c.lineTo(390, 118); c.stroke(); }, COLORS.accentGate, 4);
 
     for (const b of this.bumpers) {
       const [c1, c2] = b.kind === "planet" ? COLORS.planet : COLORS.moon;
@@ -295,7 +330,7 @@ export class PinballGame {
     const bg2 = c.createRadialGradient(this.bx - 3, this.by - 3, 1, this.bx, this.by, R);
     bg2.addColorStop(0, COLORS.ball[0]); bg2.addColorStop(0.5, COLORS.ball[1]); bg2.addColorStop(1, COLORS.ball[2]);
     c.shadowColor = "#fff"; c.shadowBlur = 16; c.fillStyle = bg2;
-    c.beginPath(); c.arc(this.bx, this.by, R, 0, 7); c.fill(); c.shadowBlur = 0;
+    c.beginPath(); c.arc(this.bx, this.by, this.ramp >= 0 ? R * 1.3 : R, 0, 7); c.fill(); c.shadowBlur = 0;
 
     c.textAlign = "center"; c.font = "bold 16px Fredoka, sans-serif";
     for (const p of this.pops) { c.globalAlpha = Math.max(0, p.life); c.fillStyle = COLORS.star; c.fillText(p.t, p.x, p.y); }

@@ -62,19 +62,21 @@ function Index() {
     });
     gameRef.current = g; setScore(0); setBalls(3); setMult(1); setPaused(false);
     g.start();
+    (document.activeElement as HTMLElement | null)?.blur();
     const key = (e: KeyboardEvent, down: boolean) => {
       const k = e.key.toLowerCase();
+      if (e.repeat && k !== "p" && k !== "escape") { e.preventDefault(); return; }
       if (k === "arrowleft" || k === "a") g.flip(0, down);
       else if (k === "arrowright" || k === "d") g.flip(1, down);
-      else if (k === " ") g.setCharging(down);
+      else if (k === " " || e.code === "Space") g.setCharging(down);
       else if ((k === "p" || k === "escape") && down) { g.paused = !g.paused; setPaused(g.paused); }
       else return;
       e.preventDefault();
     };
     const kd = (e: KeyboardEvent) => key(e, true), ku = (e: KeyboardEvent) => key(e, false);
     const blur = () => { g.paused = true; setPaused(true); };
-    window.addEventListener("keydown", kd); window.addEventListener("keyup", ku); window.addEventListener("blur", blur);
-    return () => { g.stop(); window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); window.removeEventListener("blur", blur); };
+    window.addEventListener("keydown", kd, true); window.addEventListener("keyup", ku, true); window.addEventListener("blur", blur);
+    return () => { g.stop(); window.removeEventListener("keydown", kd, true); window.removeEventListener("keyup", ku, true); window.removeEventListener("blur", blur); };
   }, [screen]);
 
   const togglePause = () => { const g = gameRef.current; if (!g) return; g.paused = !g.paused; setPaused(g.paused); };
@@ -106,7 +108,7 @@ function Index() {
       {screen === "game" && (
         <div className="flex flex-col lg:flex-row gap-4 items-center lg:items-start">
           <div className="relative">
-            <canvas ref={canvasRef} width={W} height={H} className="table-frame w-[min(92vw,400px)] h-auto touch-none" />
+            <canvas ref={canvasRef} tabIndex={0} width={W} height={H} className="table-frame w-[min(92vw,400px)] h-auto touch-none" />
             {paused && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background/70 rounded-3xl">
                 <p className="title text-4xl">Pausa</p>
@@ -128,7 +130,7 @@ function Index() {
               <div className="stat">Multiplicador<br /><b className="text-xl text-star">x{mult}</b></div>
             </div>
             <div className="stat text-center text-sm">Recorde: <b className="text-star">{Math.max(best, score).toLocaleString()}</b></div>
-            <button className="btn-ghost w-full" onClick={togglePause}>{paused ? "▶ Continuar" : "⏸ Pausar"}</button>
+            <button className="btn-ghost w-full" onMouseDown={(e) => e.preventDefault()} onClick={togglePause}>{paused ? "▶ Continuar" : "⏸ Pausar"}</button>
           </aside>
         </div>
       )}
