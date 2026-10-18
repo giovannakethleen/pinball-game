@@ -45,10 +45,12 @@ const segs: Seg[] = [
   { ax: 60, ay: 470, bx: 100, by: 540 },
   { ax: 305, ay: 470, bx: 265, by: 540 },
   // top rollover lane posts
-  { ax: 125, ay: 22, bx: 125, by: 58 },
-  { ax: 175, ay: 22, bx: 175, by: 58 },
-  { ax: 225, ay: 22, bx: 225, by: 58 },
-  { ax: 275, ay: 22, bx: 275, by: 58 },
+  { ax: 110, ay: 58, bx: 110, by: 84 },
+  { ax: 146, ay: 58, bx: 146, by: 84 },
+  { ax: 182, ay: 58, bx: 182, by: 84 },
+  { ax: 218, ay: 58, bx: 218, by: 84 },
+  { ax: 254, ay: 58, bx: 254, by: 84 },
+  { ax: 290, ay: 58, bx: 290, by: 84 },
 ];
 
 export class PinballGame {
@@ -60,11 +62,13 @@ export class PinballGame {
   ramp = -1;
   ri = 0;
   ramps: { path: [number, number][]; pts: number; color: string; label: string; dur: number }[] = [
-    { path: [[45, 440], [32, 330], [34, 220], [55, 120], [110, 62], [180, 52], [235, 70]], pts: 1000, color: "rgba(167,139,250,0.55)", label: "RAMPA", dur: 0.9 },
+    { path: [[45, 440], [32, 330], [34, 220], [55, 120], [100, 100], [150, 104], [190, 112]], pts: 1000, color: "rgba(167,139,250,0.55)", label: "RAMPA", dur: 0.9 },
     { path: [[325, 335], [345, 240], [342, 150], [315, 105], [285, 125], [290, 230], [310, 380], [300, 500], [282, 560]], pts: 1500, color: "rgba(244,114,182,0.45)", label: "BURACO DE MINHOCA", dur: 1.2 },
   ];
-  hole = { x: 200, y: 505, t: -1, cd: 0 };
-  lanes = [{ x: 150, lit: false }, { x: 200, lit: false }, { x: 250, lit: false }];
+  holes = [{ x: 200, y: 505 }, { x: 200, y: 34 }];
+  hole = { from: 0, t: -1, cd: 0 };
+  lanes = "ASTRO".split("").map((ch, i) => ({ x: 128 + i * 36, ch, lit: false }));
+  comet = { x: 200, dir: 1, cd: 0, y: 265 };
   laneCd = 0;
   balls = 3;
   score = 0;
@@ -216,31 +220,54 @@ export class PinballGame {
         this.ramp = 0; this.ri = i; this.ev.onSound("launch"); return;
       }
     }
-    // black hole
+    // black holes (teleport between them)
     const h = this.hole;
     h.cd = Math.max(0, h.cd - dt);
     if (h.t >= 0) {
       h.t += dt;
-      this.bx = h.x + Math.cos(h.t * 18) * 10 * (1 - h.t); this.by = h.y + Math.sin(h.t * 18) * 10 * (1 - h.t);
-      if (h.t > 0.9) {
-        h.t = -1; h.cd = 1.5;
-        const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.2;
-        this.vx = Math.cos(a) * 900; this.vy = Math.sin(a) * 900;
-        this.addScore(2000, h.x, h.y - 25); this.burst(h.x, h.y, COLORS.glow, 40); this.ev.onSound("bonus");
-        this.pops.push({ x: 200, y: 330, t: "BURACO NEGRO!", life: 1.2 });
+      const inH = this.holes[h.from]!, outH = this.holes[1 - h.from]!;
+      if (h.t < 0.5) {
+        const k = 1 - h.t / 0.5;
+        this.bx = inH.x + Math.cos(h.t * 18) * 12 * k; this.by = inH.y + Math.sin(h.t * 18) * 12 * k;
+      } else {
+        const k = (h.t - 0.5) / 0.5;
+        this.bx = outH.x + Math.cos(h.t * 18) * 12 * k; this.by = outH.y + Math.sin(h.t * 18) * 12 * k;
+      }
+      if (h.t > 1) {
+        h.t = -1; h.cd = 1.2;
+        this.bx = outH.x; this.by = outH.y;
+        const up = h.from === 1 ? -1 : 1; // from top hole -> exit bottom going up
+        const a = (up < 0 ? -Math.PI / 2 : Math.PI / 2) + (Math.random() - 0.5) * 1.2;
+        const sp = up < 0 ? 900 : 300;
+        this.vx = Math.cos(a) * sp; this.vy = Math.sin(a) * sp;
+        this.addScore(2000, outH.x, outH.y + 30); this.burst(outH.x, outH.y, COLORS.glow, 40); this.ev.onSound("bonus");
+        this.pops.push({ x: 200, y: 330, t: "TELETRANSPORTE!", life: 1.2 });
       }
       return;
     }
-    if (h.cd <= 0 && Math.hypot(this.bx - h.x, this.by - h.y) < 16) { h.t = 0; this.ev.onSound("star"); return; }
+    if (h.cd <= 0) {
+      const i = this.holes.findIndex((o) => Math.hypot(this.bx - o.x, this.by - o.y) < 16);
+      if (i >= 0) { h.t = 0; h.from = i; this.ev.onSound("star"); return; }
+    }
+    // comet target
+    const cm = this.comet;
+    cm.cd = Math.max(0, cm.cd - dt);
+    cm.x += cm.dir * 70 * dt;
+    if (cm.x > 300 || cm.x < 100) cm.dir *= -1;
+    if (cm.cd <= 0 && Math.hypot(this.bx - cm.x, this.by - cm.y) < R + 12) {
+      cm.cd = 0.6; this.vy = -Math.abs(this.vy) - 200;
+      this.addScore(750, cm.x, cm.y - 18); this.burst(cm.x, cm.y, "#7dd3fc", 24); this.ev.onSound("bonus");
+      this.pops.push({ x: cm.x, y: cm.y + 30, t: "COMETA!", life: 1 });
+    }
     // top lanes
     this.laneCd = Math.max(0, this.laneCd - dt);
-    if (this.by < 50 && this.laneCd <= 0) {
-      const ln = this.lanes.find((l) => Math.abs(this.bx - l.x) < 18);
-      if (ln && !ln.lit) { ln.lit = true; this.laneCd = 0.3; this.addScore(300, ln.x, 70); this.ev.onSound("star"); }
+    if (this.by > 56 && this.by < 86 && this.laneCd <= 0) {
+      const ln = this.lanes.find((l) => Math.abs(this.bx - l.x) < 14);
+      if (ln && !ln.lit) { ln.lit = true; this.laneCd = 0.3; this.addScore(300, ln.x, 100); this.ev.onSound("star"); }
       if (this.lanes.every((l) => l.lit)) {
         this.lanes.forEach((l) => (l.lit = false));
-        this.addScore(3000, 200, 80); this.pops.push({ x: 200, y: 330, t: "GALÁXIA COMPLETA!", life: 1.4 });
-        this.burst(200, 40, COLORS.star, 40); this.ev.onSound("bonus");
+        this.addScore(5000, 200, 110); this.pops.push({ x: 200, y: 330, t: "ASTRO COMPLETO!", life: 1.4 });
+        this.burst(200, 70, COLORS.star, 40); this.ev.onSound("bonus");
       }
     }
     if (!this.gate && this.bx < 345) this.gate = true;
@@ -333,24 +360,50 @@ export class PinballGame {
 
     this.glowStroke(() => { for (const s of segs) { c.beginPath(); c.moveTo(s.ax, s.ay); c.lineTo(s.bx, s.by); c.stroke(); } }, COLORS.wall, 4);
 
-    // black hole
-    const h = this.hole;
-    for (let i = 5; i > 0; i--) {
-      c.strokeStyle = `rgba(216,180,254,${0.12 * i})`; c.lineWidth = 2;
-      c.beginPath(); c.arc(h.x, h.y, 10 + i * 9 + Math.sin(this.t * 3 + i) * 2, this.t * i, this.t * i + 4.5); c.stroke();
+    // black holes
+    for (const h of this.holes) {
+      for (let i = 5; i > 0; i--) {
+        c.strokeStyle = `rgba(216,180,254,${0.12 * i})`; c.lineWidth = 2;
+        const rr = h.y < 100 ? 6 + i * 4 : 10 + i * 9;
+        c.beginPath(); c.arc(h.x, h.y, rr + Math.sin(this.t * 3 + i) * 2, this.t * i, this.t * i + 4.5); c.stroke();
+      }
+      const hg = c.createRadialGradient(h.x, h.y, 2, h.x, h.y, 20);
+      hg.addColorStop(0, "#000"); hg.addColorStop(0.7, "#1e0636"); hg.addColorStop(1, "rgba(192,132,252,0.8)");
+      c.fillStyle = hg; c.beginPath(); c.arc(h.x, h.y, h.y < 100 ? 16 : 20, 0, 7); c.fill();
     }
-    const hg = c.createRadialGradient(h.x, h.y, 2, h.x, h.y, 22);
-    hg.addColorStop(0, "#000"); hg.addColorStop(0.7, "#1e0636"); hg.addColorStop(1, "rgba(192,132,252,0.8)");
-    c.fillStyle = hg; c.beginPath(); c.arc(h.x, h.y, 20, 0, 7); c.fill();
-    // top lanes
+    // ASTRO lanes
+    c.textAlign = "center"; c.font = "bold 14px Fredoka, sans-serif";
     for (const l of this.lanes) {
-      c.fillStyle = l.lit ? COLORS.star : "rgba(255,255,255,0.2)"; c.shadowColor = COLORS.star; c.shadowBlur = l.lit ? 16 : 0;
-      c.beginPath(); c.arc(l.x, 40, 6, 0, 7); c.fill(); c.shadowBlur = 0;
+      c.fillStyle = l.lit ? COLORS.star : "rgba(255,255,255,0.3)"; c.shadowColor = COLORS.star; c.shadowBlur = l.lit ? 16 : 0;
+      c.fillText(l.ch, l.x, 76); c.shadowBlur = 0;
     }
+    // comet
+    const cm = this.comet;
+    const tail = c.createLinearGradient(cm.x - cm.dir * 40, cm.y, cm.x, cm.y);
+    tail.addColorStop(0, "rgba(125,211,252,0)"); tail.addColorStop(1, "rgba(125,211,252,0.8)");
+    c.strokeStyle = tail; c.lineWidth = 8; c.beginPath(); c.moveTo(cm.x - cm.dir * 40, cm.y); c.lineTo(cm.x, cm.y); c.stroke();
+    c.fillStyle = "#e0f2fe"; c.shadowColor = "#7dd3fc"; c.shadowBlur = cm.cd > 0 ? 30 : 14;
+    c.beginPath(); c.arc(cm.x, cm.y, 9, 0, 7); c.fill(); c.shadowBlur = 0;
     // ramps
     c.lineJoin = "round"; c.lineCap = "round";
-    for (const rm of this.ramps) {
+    this.ramps.forEach((rm, ri) => {
       const rp = rm.path;
+      if (ri === 1) {
+        // wormhole: dark tube with spinning rings
+        c.strokeStyle = "rgba(30,6,54,0.85)"; c.lineWidth = 30;
+        c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke();
+        this.glowStroke(() => { c.lineWidth = 2; c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); }, COLORS.accentGate, 2);
+        for (let i = 0; i < rp.length - 1; i++) {
+          const [x0, y0] = rp[i]!, [x1, y1] = rp[i + 1]!;
+          const k = (this.t * 0.8 + i * 0.37) % 1;
+          const x = x0 + (x1 - x0) * k, y = y0 + (y1 - y0) * k;
+          c.strokeStyle = `rgba(244,114,182,${0.9 - k * 0.5})`; c.lineWidth = 2;
+          c.beginPath(); c.ellipse(x, y, 14, 6, Math.atan2(y1 - y0, x1 - x0) + Math.PI / 2, 0, 7); c.stroke();
+        }
+        c.fillStyle = COLORS.accentGate; c.beginPath(); c.arc(rp[0]![0], rp[0]![1], 14, 0, 7); c.fill();
+        c.fillStyle = "#fff"; c.font = "bold 12px Fredoka, sans-serif"; c.textAlign = "center"; c.fillText("@", rp[0]![0], rp[0]![1] + 4);
+        return;
+      }
       c.strokeStyle = rm.color; c.lineWidth = 28;
       c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke();
       c.strokeStyle = "rgba(255,255,255,0.35)"; c.lineWidth = 1.5;
@@ -359,7 +412,7 @@ export class PinballGame {
       this.glowStroke(() => { c.lineWidth = 3; c.setLineDash([10, 8]); c.lineDashOffset = -this.t * 40; c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); c.setLineDash([]); }, COLORS.star, 3);
       c.fillStyle = COLORS.glow; c.beginPath(); c.arc(rp[0]![0], rp[0]![1], 14, 0, 7); c.fill();
       c.fillStyle = "#fff"; c.font = "bold 10px Fredoka, sans-serif"; c.textAlign = "center"; c.fillText("▲", rp[0]![0], rp[0]![1] + 4);
-    }
+    });
     if (this.gate) this.glowStroke(() => { c.beginPath(); c.moveTo(355, 160); c.lineTo(390, 118); c.stroke(); }, COLORS.accentGate, 4);
 
     for (const b of this.bumpers) {
