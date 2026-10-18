@@ -1,24 +1,40 @@
-# Universo Lilás
+# Cosmic Pinball
 
-mandei um exemplo de imagem, mas gostaria que fosse lilas mesmo com foco em universo, estrelas e bem divertido
+## Estrutura
 
-This project was built with [Lovable](https://lovable.dev).
+```text
+apps/
+  web/  # Angular: interface, controles, motor do jogo e ranking local
+```
 
-## Build with Lovable
+O motor TypeScript e as regras de pontuação foram preservados durante a troca
+da interface. O ranking fica salvo no `localStorage` do navegador e não é
+compartilhado entre jogadores.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/3e0bd615-4144-4ab7-8db0-6c0b8568399f).
+## Requisitos
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+- Node.js 20.19+, 22.12+ ou 24+
 
-## Development
+## Desenvolvimento local
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Instale as dependências a partir da raiz do repositório:
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+npm install
 npm run dev
 ```
+
+O jogo Angular fica disponível em `http://localhost:4200`.
+
+## Testes e build
+
+```sh
+npm test
+npm run build
+```
+
+## Publicação
+
+O frontend Angular pode ser publicado como conteúdo estático em uma hospedagem
+ou CDN para sites estáticos. O build de produção é gerado por `npm run build`;
+o diretório de saída é `apps/web/dist/cosmic-pinball/browser`.

@@ -1,0 +1,152 @@
+<main class="cosmos">
+  @if (screen() === 'home') {
+    <section class="panel home-panel">
+      <div class="planet float" aria-hidden="true">🪐</div>
+      <h1 class="title home-title">Cosmic<br />Pinball</h1>
+      <p class="muted">Acenda as 5 estrelas para formar uma constelação e dobrar seus pontos!</p>
+      <button class="button button-cosmic full-width" type="button" (click)="startGame()">🚀 Jogar</button>
+      <button class="button button-ghost full-width" type="button" (click)="setScreen('ranking')">🏆 Ranking</button>
+      <section class="home-details" aria-label="Controles e preferências">
+        <div class="instructions">
+          <h2 class="details-heading">Como jogar</h2>
+          <p><span class="key-group"><kbd>←</kbd><kbd>A</kbd></span><span>Palheta esquerda</span></p>
+          <p><span class="key-group"><kbd>→</kbd><kbd>D</kbd></span><span>Palheta direita</span></p>
+          <p><kbd class="wide-key">ESPAÇO</kbd><span>Segure e solte para lançar</span></p>
+          <p><kbd>P</kbd><span>Pausar o jogo</span></p>
+        </div>
+        <div class="home-preferences">
+          <div class="record-badge">
+            <span>⭐ Recorde</span>
+            <strong class="star-text">{{ bestScore.toLocaleString() }}</strong>
+          </div>
+          <label class="volume-control">
+            <span aria-hidden="true">🔊</span>
+            <span class="volume-label">Som</span>
+            <input
+              aria-label="Volume dos efeitos sonoros"
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              [value]="volume()"
+              (input)="setVolume($any($event.target).value)"
+            />
+          </label>
+        </div>
+      </section>
+    </section>
+  }
+
+  <section class="game-layout" [hidden]="screen() !== 'game'">
+    <aside class="panel game-panel">
+      <h2 class="title game-title">Cosmic Pinball</h2>
+      <div class="score-box">{{ score().toString().padStart(7, '0') }}</div>
+      <div class="stats-grid">
+        <div class="stat hud-stat"><span>Bolas</span><b class="stat-value">{{ remainingBalls }}</b></div>
+        <div class="stat hud-stat"><span>Multiplicador</span><b class="stat-value star-text">x{{ multiplier() }}</b></div>
+      </div>
+      <div class="hud-footer">
+        <div class="stat record-stat">Recorde: <b class="star-text">{{ displayedRecord.toLocaleString() }}</b></div>
+        <button class="button button-ghost pause-button" type="button" (click)="togglePause()">
+          {{ paused() ? '▶ Continuar' : '⏸ Pausar' }}
+        </button>
+      </div>
+    </aside>
+
+    <div class="playfield">
+      <div class="canvas-wrap">
+        <canvas
+          #gameCanvas
+          class="table-frame"
+          [attr.width]="width"
+          [attr.height]="height"
+          tabindex="0"
+          aria-label="Mesa de Cosmic Pinball"
+        ></canvas>
+        @if (paused()) {
+          <div class="pause-overlay">
+            <p class="title pause-title">Pausa</p>
+            <button class="button button-cosmic" type="button" (click)="togglePause()">Continuar</button>
+            <button class="button button-ghost" type="button" (click)="setScreen('home')">Sair</button>
+          </div>
+        }
+        <div class="touch-controls">
+          <button
+            class="button button-ghost"
+            type="button"
+            aria-label="Palheta esquerda"
+            (pointerdown)="startFlipper(0, $event)"
+            (pointerup)="flip(0, false)"
+            (pointercancel)="flip(0, false)"
+          >◀</button>
+          <button
+            class="button button-cosmic"
+            type="button"
+            (pointerdown)="startCharging($event)"
+            (pointerup)="setCharging(false)"
+            (pointercancel)="cancelCharging()"
+          >Lançar</button>
+          <button
+            class="button button-ghost"
+            type="button"
+            aria-label="Palheta direita"
+            (pointerdown)="startFlipper(1, $event)"
+            (pointerup)="flip(1, false)"
+            (pointercancel)="flip(1, false)"
+          >▶</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  @if (screen() === 'over') {
+    <section class="panel game-over-panel">
+      <div class="planet float" aria-hidden="true">💫</div>
+      <h2 class="title section-title">Fim de jogo</h2>
+      <div class="score-box">{{ score().toLocaleString() }}</div>
+      @if (score() > bestScore) {
+        <p class="star-text new-record">Novo recorde galáctico! ✨</p>
+      }
+      @if (!saved()) {
+        <form class="save-form" (ngSubmit)="saveCurrentScore()">
+          <input
+            [(ngModel)]="playerName"
+            name="playerName"
+            maxlength="12"
+            placeholder="Seu apelido"
+            aria-label="Seu apelido"
+          />
+          <button class="button button-cosmic" type="submit">Salvar</button>
+        </form>
+      } @else {
+        <p class="muted">Pontuação salva! 🌟</p>
+      }
+      <div class="button-row">
+        <button class="button button-cosmic" type="button" (click)="startGame()">Jogar de novo</button>
+        <button class="button button-ghost" type="button" (click)="setScreen('ranking')">Ranking</button>
+      </div>
+    </section>
+  }
+
+  @if (screen() === 'ranking') {
+    <section class="panel ranking-panel">
+      <h2 class="title section-title">Ranking</h2>
+      @if (ranking().length === 0) {
+        <p class="muted empty-ranking">Nenhuma pontuação ainda. Seja a primeira estrela! ⭐</p>
+      } @else {
+        <ol class="ranking-list">
+          @for (entry of ranking(); track entry.date; let index = $index) {
+            <li class="stat ranking-entry">
+              <span>{{ medal(index) }} {{ entry.name }}</span>
+              <span class="ranking-score">
+                <b class="star-text">{{ entry.score.toLocaleString() }}</b>
+                <small class="muted">{{ formatDate(entry.date) }}</small>
+              </span>
+            </li>
+          }
+        </ol>
+      }
+      <button class="button button-cosmic full-width" type="button" (click)="setScreen('home')">Voltar</button>
+    </section>
+  }
+</main>

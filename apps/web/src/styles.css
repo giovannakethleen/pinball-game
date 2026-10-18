@@ -1,0 +1,22 @@
+/* You can add global styles to this file, and also import other style files */
+html,
+body {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  color: #faf5ff;
+  background: #21102f;
+  font-family: 'Fredoka', system-ui, sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+* {
+  box-sizing: border-box;
+}
