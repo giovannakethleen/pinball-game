@@ -29,7 +29,7 @@ const COLORS = {
   starOff: "#7c5ba8",
   flipper: "#fbcfe8",
   ball: ["#ffffff", "#c4b5fd", "#6d28d9"],
-};
+} as const;
 
 const segs: Seg[] = [
   { ax: 10, ay: 80, bx: 10, by: 520 },
@@ -184,19 +184,20 @@ export class PinballGame {
       const pts = this.rampPath, n = pts.length - 1;
       if (this.ramp >= 1) {
         this.ramp = -1;
-        const [ax, ay] = pts[n - 1], [bx, by] = pts[n];
+        const [ax, ay] = pts[n - 1]!, [bx, by] = pts[n]!;
         const l = Math.hypot(bx - ax, by - ay);
         this.bx = bx; this.by = by; this.vx = ((bx - ax) / l) * 500; this.vy = ((by - ay) / l) * 500;
         this.addScore(1000, bx, by - 15); this.burst(bx, by, COLORS.glow, 30); this.ev.onSound("bonus");
       } else {
         const f = this.ramp * n, i = Math.floor(f), k = f - i;
-        this.bx = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * k;
-        this.by = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * k;
+        const p0 = pts[i]!, p1 = pts[i + 1]!;
+        this.bx = p0[0] + (p1[0] - p0[0]) * k;
+        this.by = p0[1] + (p1[1] - p0[1]) * k;
         if (Math.random() < 0.5) this.parts.push({ x: this.bx, y: this.by, vx: 0, vy: 0, life: 0.4, c: COLORS.star });
       }
       return;
     }
-    if (this.vy < -150 && Math.hypot(this.bx - this.rampPath[0][0], this.by - this.rampPath[0][1]) < 20) {
+    if (this.vy < -150 && Math.hypot(this.bx - this.rampPath[0]![0], this.by - this.rampPath[0]![1]) < 20) {
       this.ramp = 0; this.ev.onSound("launch"); return;
     }
     if (!this.gate && this.bx < 345) this.gate = true;
@@ -295,8 +296,8 @@ export class PinballGame {
     c.strokeStyle = "rgba(167,139,250,0.55)"; c.lineWidth = 30;
     c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke();
     this.glowStroke(() => { c.lineWidth = 3; c.setLineDash([10, 8]); c.lineDashOffset = -this.t * 40; c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); c.setLineDash([]); }, COLORS.star, 3);
-    c.fillStyle = COLORS.glow; c.beginPath(); c.arc(rp[0][0], rp[0][1], 14, 0, 7); c.fill();
-    c.fillStyle = "#fff"; c.font = "bold 10px Fredoka, sans-serif"; c.textAlign = "center"; c.fillText("▲", rp[0][0], rp[0][1] + 4);
+    c.fillStyle = COLORS.glow; c.beginPath(); c.arc(rp[0]![0], rp[0]![1], 14, 0, 7); c.fill();
+    c.fillStyle = "#fff"; c.font = "bold 10px Fredoka, sans-serif"; c.textAlign = "center"; c.fillText("▲", rp[0]![0], rp[0]![1] + 4);
     if (this.gate) this.glowStroke(() => { c.beginPath(); c.moveTo(355, 160); c.lineTo(390, 118); c.stroke(); }, COLORS.accentGate, 4);
 
     for (const b of this.bumpers) {
