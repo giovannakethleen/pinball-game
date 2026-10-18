@@ -52,6 +52,36 @@
   text-align: center;
 }
 
+.track-picker {
+  display: grid;
+  gap: 0.55rem;
+  text-align: left;
+}
+
+.track-options {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.track-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 4.25rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 1rem;
+  text-align: left;
+}
+
+.track-option.selected {
+  border-color: #eacbff;
+}
+
+.crystal-option.selected {
+  border-color: #67e8f9;
+}
+
 .planet {
   font-size: 3.75rem;
   line-height: 1;

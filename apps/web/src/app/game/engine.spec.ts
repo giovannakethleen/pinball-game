@@ -76,3 +76,22 @@ describe('pinball launch', () => {
     expect(game.vy).toBe(0);
   });
 });
+
+describe('pinball tracks', () => {
+  it('creates the crystal garden with its own aurora lanes and bumpers', () => {
+    const events: GameEvents = {
+      onScore: vi.fn(),
+      onBalls: vi.fn(),
+      onGameOver: vi.fn(),
+      onSound: vi.fn(),
+    };
+    const canvas = { getContext: () => null } as unknown as HTMLCanvasElement;
+    const game = new PinballGame(canvas, events, 'crystal-garden');
+
+    expect(game.track).toBe('crystal-garden');
+    expect(game.lanes.map((lane) => lane.ch).join('')).toBe('AURORA');
+    expect(game.bumpers).toHaveLength(5);
+    expect(game.ramps[0]?.label).toBe('CASCATA DE CRISTAIS');
+    expect(game.holes).toEqual([{ x: 200, y: 505 }, { x: 200, y: 34 }]);
+  });
+});

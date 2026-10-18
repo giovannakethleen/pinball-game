@@ -1,6 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { PinballGame, H, W } from './game/engine';
+import { PinballGame, H, W, type TrackId } from './game/engine';
 import { loadRanking, saveScore, type ScoreEntry } from './game/ranking';
 
 type Screen = 'home' | 'game' | 'over' | 'ranking';
@@ -29,6 +29,7 @@ export class App implements OnInit, OnDestroy {
   protected readonly balls = signal(3);
   protected readonly paused = signal(false);
   protected readonly volume = signal(0.6);
+  protected readonly selectedTrack = signal<TrackId>('orbit');
   protected readonly ranking = signal<ScoreEntry[]>([]);
   protected playerName = '';
   protected readonly saved = signal(false);
@@ -79,6 +80,14 @@ export class App implements OnInit, OnDestroy {
     this.volume.set(Number(value));
   }
 
+  protected selectTrack(track: TrackId): void {
+    this.selectedTrack.set(track);
+  }
+
+  protected get trackName(): string {
+    return this.selectedTrack() === 'crystal-garden' ? 'Jardim de Cristal' : 'Órbita Lilás';
+  }
+
   protected setScreen(screen: Screen): void {
     if (this.screen() === 'game' && screen !== 'game') this.stopGame();
     if (screen === 'ranking') this.ranking.set(loadRanking());
@@ -110,7 +119,7 @@ export class App implements OnInit, OnDestroy {
         }, 600);
       },
       onSound: (kind) => this.beep(kind, this.volume()),
-    });
+    }, this.selectedTrack());
 
     this.game = game;
     game.start();

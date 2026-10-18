@@ -3,7 +3,32 @@
     <section class="panel home-panel">
       <div class="planet float" aria-hidden="true">🪐</div>
       <h1 class="title home-title">Cosmic<br />Pinball</h1>
-      <p class="muted">Acenda as 5 estrelas para formar uma constelação e dobrar seus pontos!</p>
+      <p class="muted">Escolha uma pista e prepare-se para uma aventura entre as estrelas.</p>
+      <section class="track-picker" aria-labelledby="track-heading">
+        <h2 id="track-heading" class="details-heading">Escolha sua pista</h2>
+        <div class="track-options">
+          <button
+            class="button button-ghost track-option"
+            [class.selected]="selectedTrack() === 'orbit'"
+            [attr.aria-pressed]="selectedTrack() === 'orbit'"
+            type="button"
+            (click)="selectTrack('orbit')"
+          >
+            <span aria-hidden="true">🪐</span>
+            <span><strong>Órbita Lilás</strong><br /><small>Buracos negros e chuva de estrelas</small></span>
+          </button>
+          <button
+            class="button button-ghost track-option crystal-option"
+            [class.selected]="selectedTrack() === 'crystal-garden'"
+            [attr.aria-pressed]="selectedTrack() === 'crystal-garden'"
+            type="button"
+            (click)="selectTrack('crystal-garden')"
+          >
+            <span aria-hidden="true">💎</span>
+            <span><strong>Jardim de Cristal</strong><br /><small>Ative a aurora e atravesse portais verdes</small></span>
+          </button>
+        </div>
+      </section>
       <button class="button button-cosmic full-width" type="button" (click)="startGame()">🚀 Jogar</button>
       <button class="button button-ghost full-width" type="button" (click)="setScreen('ranking')">🏆 Ranking</button>
       <section class="home-details" aria-label="Controles e preferências">
@@ -61,7 +86,7 @@
           [attr.width]="width"
           [attr.height]="height"
           tabindex="0"
-          aria-label="Mesa de Cosmic Pinball"
+          [attr.aria-label]="'Mesa de Cosmic Pinball: ' + trackName"
         ></canvas>
         @if (paused()) {
           <div class="pause-overlay">
