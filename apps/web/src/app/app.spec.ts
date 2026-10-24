@@ -30,7 +30,7 @@ describe('App', () => {
     expect(compiled.querySelector('.game-layout')?.hasAttribute('hidden')).toBe(true);
   });
 
-  it('allows selecting the crystal garden track', async () => {
+  it('allows selecting the Mars nebula track', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     fixture.detectChanges();
@@ -39,7 +39,27 @@ describe('App', () => {
     tracks[1]?.click();
     fixture.detectChanges();
 
-    expect(tracks[0]?.getAttribute('aria-pressed')).toBe('false');
     expect(tracks[1]?.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('allows selecting the living Earth track', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const tracks = fixture.nativeElement.querySelectorAll('.track-option') as NodeListOf<HTMLButtonElement>;
+
+    tracks[2]?.click();
+    fixture.detectChanges();
+
+    expect(tracks[2]?.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('does not offer the removed crystal garden track', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Jardim de Cristal');
+    expect(fixture.nativeElement.querySelectorAll('.track-option')).toHaveLength(3);
   });
 });

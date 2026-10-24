@@ -28,11 +28,14 @@ export class App implements OnInit, OnDestroy {
   protected readonly multiplier = signal(1);
   protected readonly balls = signal(3);
   protected readonly paused = signal(false);
+  protected readonly launcherPressed = signal(false);
   protected readonly volume = signal(0.6);
   protected readonly selectedTrack = signal<TrackId>('orbit');
   protected readonly ranking = signal<ScoreEntry[]>([]);
   protected playerName = '';
   protected readonly saved = signal(false);
+  private readonly leftFlipperPressed = signal(false);
+  private readonly rightFlipperPressed = signal(false);
 
   private game: PinballGame | null = null;
   private audio: AudioContext | null = null;
@@ -43,6 +46,7 @@ export class App implements OnInit, OnDestroy {
     if (!this.game || this.screen() !== 'game') return;
     this.game.paused = true;
     this.paused.set(true);
+    this.releaseControls();
   };
 
   protected readonly width = W;
@@ -85,7 +89,11 @@ export class App implements OnInit, OnDestroy {
   }
 
   protected get trackName(): string {
-    return this.selectedTrack() === 'crystal-garden' ? 'Jardim de Cristal' : 'Órbita Lilás';
+    switch (this.selectedTrack()) {
+      case 'mars-nebula': return 'Nebulosa de Marte';
+      case 'living-earth': return 'Terra Viva';
+      default: return 'Órbita Lilás';
+    }
   }
 
   protected setScreen(screen: Screen): void {
@@ -95,6 +103,7 @@ export class App implements OnInit, OnDestroy {
   }
 
   protected startGame(): void {
+    this.activateAudio();
     this.stopGame();
     this.score.set(0);
     this.balls.set(3);
@@ -133,10 +142,17 @@ export class App implements OnInit, OnDestroy {
     if (!this.game) return;
     this.game.paused = !this.game.paused;
     this.paused.set(this.game.paused);
+    if (this.game.paused) this.releaseControls();
+    else this.activateAudio();
   }
 
   protected flip(index: 0 | 1, pressed: boolean): void {
+    (index === 0 ? this.leftFlipperPressed : this.rightFlipperPressed).set(pressed);
     this.game?.flip(index, pressed);
+  }
+
+  protected flipperPressed(index: 0 | 1) {
+    return index === 0 ? this.leftFlipperPressed : this.rightFlipperPressed;
   }
 
   protected startFlipper(index: 0 | 1, event: PointerEvent): void {
@@ -145,6 +161,7 @@ export class App implements OnInit, OnDestroy {
   }
 
   protected setCharging(pressed: boolean): void {
+    this.launcherPressed.set(pressed);
     this.game?.setCharging(pressed);
   }
 
@@ -154,6 +171,7 @@ export class App implements OnInit, OnDestroy {
   }
 
   protected cancelCharging(): void {
+    this.launcherPressed.set(false);
     this.game?.cancelCharging();
   }
 
@@ -163,11 +181,18 @@ export class App implements OnInit, OnDestroy {
   }
 
   private stopGame(): void {
+    this.releaseControls();
     this.game?.stop();
     this.game = null;
     window.removeEventListener('keydown', this.keyDown, true);
     window.removeEventListener('keyup', this.keyUp, true);
     window.removeEventListener('blur', this.windowBlur);
+  }
+
+  private releaseControls(): void {
+    this.flip(0, false);
+    this.flip(1, false);
+    this.cancelCharging();
   }
 
   private capturePointer(event: PointerEvent): void {
@@ -186,9 +211,9 @@ export class App implements OnInit, OnDestroy {
       return;
     }
 
-    if (key === 'arrowleft' || key === 'a') game.flip(0, pressed);
-    else if (key === 'arrowright' || key === 'd') game.flip(1, pressed);
-    else if (key === ' ' || event.code === 'Space') game.setCharging(pressed);
+    if (key === 'arrowleft' || key === 'a') this.flip(0, pressed);
+    else if (key === 'arrowright' || key === 'd') this.flip(1, pressed);
+    else if (key === ' ' || event.code === 'Space') this.setCharging(pressed);
     else if ((key === 'p' || key === 'escape') && pressed) this.togglePause();
     else return;
     event.preventDefault();
@@ -197,6 +222,7 @@ export class App implements OnInit, OnDestroy {
   private beep(kind: string, volume: number): void {
     if (volume <= 0) return;
     this.audio ??= new AudioContext();
+    if (this.audio.state !== 'running') return;
 
     const [frequency, duration] = SOUND[kind] ?? [440, 0.1];
     const oscillator = this.audio.createOscillator();
@@ -212,5 +238,14 @@ export class App implements OnInit, OnDestroy {
     oscillator.connect(gain).connect(this.audio.destination);
     oscillator.start();
     oscillator.stop(this.audio.currentTime + duration);
+  }
+
+  private activateAudio(): void {
+    this.audio ??= new AudioContext();
+    if (this.audio.state === 'suspended') {
+      void this.audio.resume().catch((error: unknown) => {
+        console.error('Não foi possível ativar os efeitos sonoros.', error);
+      });
+    }
   }
 }

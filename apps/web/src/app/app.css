@@ -4,6 +4,7 @@
 
 .cosmos {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,6 +42,7 @@
 .game-over-panel,
 .ranking-panel {
   width: min(100%, 28rem);
+  min-width: 0;
 }
 
 .home-panel,
@@ -59,13 +61,15 @@
 }
 
 .track-options {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
 }
 
 .track-option {
   display: flex;
   align-items: center;
+  min-width: 0;
   gap: 0.75rem;
   width: 100%;
   min-height: 4.25rem;
@@ -74,16 +78,17 @@
   text-align: left;
 }
 
+.track-option > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .track-option.selected {
   border-color: #eacbff;
 }
 
-.crystal-option.selected {
-  border-color: #67e8f9;
-}
-
 .planet {
-  font-size: 3.75rem;
+  font-size: clamp(2.75rem, 15vw, 3.75rem);
   line-height: 1;
 }
 
@@ -100,7 +105,7 @@
 }
 
 .home-title {
-  font-size: clamp(3.25rem, 15vw, 4rem);
+  font-size: clamp(2.25rem, 12vw, 4rem);
 }
 
 .section-title {
@@ -176,7 +181,7 @@ input:focus-visible {
 .home-details {
   display: grid;
   gap: 0.9rem;
-  padding: 1rem;
+  padding: 0.75rem;
   border: 1px solid rgb(226 180 255 / 22%);
   border-radius: 1.25rem;
   background: rgb(35 19 49 / 46%);
@@ -270,7 +275,7 @@ input:focus-visible {
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  width: min(92vw, 400px);
+  width: min(100%, 400px);
 }
 
 .game-layout[hidden] {
@@ -315,24 +320,31 @@ input:focus-visible {
 
 .touch-controls {
   display: none;
-  position: absolute;
-  z-index: 1;
-  right: 0.75rem;
-  bottom: 0.75rem;
-  left: 0.75rem;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 .touch-controls .button {
   min-width: 0;
-  padding-inline: 0.5rem;
-  background-color: rgb(50 28 68 / 88%);
-  backdrop-filter: blur(8px);
+  min-height: 4rem;
+  padding: 0.5rem;
 }
 
-.touch-controls .button-cosmic {
-  background-image: linear-gradient(135deg, #d9a3ff, #fb91d3);
+.touch-flipper {
+  display: grid;
+  place-content: center;
+  gap: 0.1rem;
+}
+
+.touch-flipper small {
+  font-size: 0.7rem;
+}
+
+.touch-controls .pressed {
+  transform: scale(0.96);
+  border-color: #fff1a8;
+  filter: brightness(1.3);
 }
 
 .game-panel {
@@ -487,9 +499,91 @@ input:focus-visible {
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 700px), (orientation: landscape) and (max-height: 600px) {
+  .cosmos.home {
+    padding: 0.5rem;
+  }
+
+  .home-panel {
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .home-panel .instructions {
+    display: none;
+  }
+
   .touch-controls {
     display: grid;
+  }
+
+  .cosmos.playing {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    padding: 0.5rem;
+  }
+
+  .game-layout {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0.45rem;
+    height: calc(100dvh - 1rem);
+  }
+
+  .game-panel {
+    gap: 0.35rem;
+    padding: 0.5rem 0.65rem;
+  }
+
+  .playfield {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    width: 100%;
+    min-height: 0;
+  }
+
+  .canvas-wrap {
+    justify-self: center;
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    min-height: 0;
+    aspect-ratio: 400 / 720;
+  }
+
+  .table-frame {
+    width: 100%;
+    height: 100%;
+    border-radius: 1rem;
+  }
+
+  .touch-controls {
+    gap: 0.4rem;
+    margin-top: 0;
+  }
+
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .game-layout {
+    grid-template-columns: clamp(8rem, 25vw, 12rem) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .game-panel {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+  }
+
+  .playfield { grid-column: 2; grid-row: 1; }
+
+  .touch-controls .button {
+    min-height: 2.75rem;
   }
 }
 
@@ -498,12 +592,12 @@ input:focus-visible {
     padding: 0.75rem;
   }
 
-  .pause-button {
-    min-width: auto;
+  .touch-controls .button {
+    min-height: 3.5rem;
   }
 
-  .home-details {
-    padding: 0.85rem;
+  .pause-button {
+    min-width: auto;
   }
 
   .home-preferences {

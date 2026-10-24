@@ -1,4 +1,4 @@
-<main class="cosmos">
+<main class="cosmos" [class.home]="screen() === 'home'" [class.playing]="screen() === 'game'">
   @if (screen() === 'home') {
     <section class="panel home-panel">
       <div class="planet float" aria-hidden="true">🪐</div>
@@ -18,14 +18,24 @@
             <span><strong>Órbita Lilás</strong><br /><small>Buracos negros e chuva de estrelas</small></span>
           </button>
           <button
-            class="button button-ghost track-option crystal-option"
-            [class.selected]="selectedTrack() === 'crystal-garden'"
-            [attr.aria-pressed]="selectedTrack() === 'crystal-garden'"
+            class="button button-ghost track-option mars-option"
+            [class.selected]="selectedTrack() === 'mars-nebula'"
+            [attr.aria-pressed]="selectedTrack() === 'mars-nebula'"
             type="button"
-            (click)="selectTrack('crystal-garden')"
+            (click)="selectTrack('mars-nebula')"
           >
-            <span aria-hidden="true">💎</span>
-            <span><strong>Jardim de Cristal</strong><br /><small>Ative a aurora e atravesse portais verdes</small></span>
+            <span aria-hidden="true">☄️</span>
+            <span><strong>Nebulosa de Marte</strong><br /><small>Desvie de meteoros e atravesse crateras cósmicas</small></span>
+          </button>
+          <button
+            class="button button-ghost track-option earth-option"
+            [class.selected]="selectedTrack() === 'living-earth'"
+            [attr.aria-pressed]="selectedTrack() === 'living-earth'"
+            type="button"
+            (click)="selectTrack('living-earth')"
+          >
+            <span aria-hidden="true">🌍</span>
+            <span><strong>Terra Viva</strong><br /><small>Explore oceanos, continentes e órbitas de satélite</small></span>
           </button>
         </div>
       </section>
@@ -46,9 +56,9 @@
           </div>
           <label class="volume-control">
             <span aria-hidden="true">🔊</span>
-            <span class="volume-label">Som</span>
+            <span class="volume-label">Efeitos</span>
             <input
-              aria-label="Volume dos efeitos sonoros"
+              aria-label="Volume dos efeitos sonoros (sem música de fundo)"
               type="range"
               min="0"
               max="1"
@@ -95,31 +105,41 @@
             <button class="button button-ghost" type="button" (click)="setScreen('home')">Sair</button>
           </div>
         }
-        <div class="touch-controls">
-          <button
-            class="button button-ghost"
-            type="button"
-            aria-label="Palheta esquerda"
-            (pointerdown)="startFlipper(0, $event)"
-            (pointerup)="flip(0, false)"
-            (pointercancel)="flip(0, false)"
-          >◀</button>
-          <button
-            class="button button-cosmic"
-            type="button"
-            (pointerdown)="startCharging($event)"
-            (pointerup)="setCharging(false)"
-            (pointercancel)="cancelCharging()"
-          >Lançar</button>
-          <button
-            class="button button-ghost"
-            type="button"
-            aria-label="Palheta direita"
-            (pointerdown)="startFlipper(1, $event)"
-            (pointerup)="flip(1, false)"
-            (pointercancel)="flip(1, false)"
-          >▶</button>
-        </div>
+      </div>
+      <div class="touch-controls" aria-label="Controles do jogo">
+        <button
+          class="button button-ghost touch-flipper"
+          [class.pressed]="flipperPressed(0)()"
+          [attr.aria-pressed]="flipperPressed(0)()"
+          type="button"
+          aria-label="Palheta esquerda; segure para acionar"
+          (pointerdown)="startFlipper(0, $event)"
+          (pointerup)="flip(0, false)"
+          (pointercancel)="flip(0, false)"
+          (lostpointercapture)="flip(0, false)"
+        ><span aria-hidden="true">◀</span><small>Esquerda</small></button>
+        <button
+          class="button button-cosmic touch-launch"
+          [class.pressed]="launcherPressed()"
+          [attr.aria-pressed]="launcherPressed()"
+          type="button"
+          aria-label="Lançar a bola; segure para carregar e solte para lançar"
+          (pointerdown)="startCharging($event)"
+          (pointerup)="setCharging(false)"
+          (pointercancel)="cancelCharging()"
+          (lostpointercapture)="cancelCharging()"
+        >Lançar</button>
+        <button
+          class="button button-ghost touch-flipper"
+          [class.pressed]="flipperPressed(1)()"
+          [attr.aria-pressed]="flipperPressed(1)()"
+          type="button"
+          aria-label="Palheta direita; segure para acionar"
+          (pointerdown)="startFlipper(1, $event)"
+          (pointerup)="flip(1, false)"
+          (pointercancel)="flip(1, false)"
+          (lostpointercapture)="flip(1, false)"
+        ><span aria-hidden="true">▶</span><small>Direita</small></button>
       </div>
     </div>
   </section>

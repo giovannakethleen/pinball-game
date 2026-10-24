@@ -78,7 +78,7 @@ describe('pinball launch', () => {
 });
 
 describe('pinball tracks', () => {
-  it('creates the crystal garden with its own aurora lanes and bumpers', () => {
+  it('creates the Mars nebula with its own lanes, bumpers, and ramps', () => {
     const events: GameEvents = {
       onScore: vi.fn(),
       onBalls: vi.fn(),
@@ -86,12 +86,29 @@ describe('pinball tracks', () => {
       onSound: vi.fn(),
     };
     const canvas = { getContext: () => null } as unknown as HTMLCanvasElement;
-    const game = new PinballGame(canvas, events, 'crystal-garden');
+    const game = new PinballGame(canvas, events, 'mars-nebula');
 
-    expect(game.track).toBe('crystal-garden');
-    expect(game.lanes.map((lane) => lane.ch).join('')).toBe('AURORA');
+    expect(game.track).toBe('mars-nebula');
+    expect(game.lanes.map((lane) => lane.ch).join('')).toBe('MARTE');
     expect(game.bumpers).toHaveLength(5);
-    expect(game.ramps[0]?.label).toBe('CASCATA DE CRISTAIS');
-    expect(game.holes).toEqual([{ x: 200, y: 505 }, { x: 200, y: 34 }]);
+    expect(game.ramps[0]?.label).toBe('DESFILADEIRO DE MARTE');
+    expect(game.ramps[1]?.label).toBe('PORTAL DA NEBULOSA');
+  });
+
+  it('creates the living Earth with its own lanes, bumpers, and ramps', () => {
+    const events: GameEvents = {
+      onScore: vi.fn(),
+      onBalls: vi.fn(),
+      onGameOver: vi.fn(),
+      onSound: vi.fn(),
+    };
+    const canvas = { getContext: () => null } as unknown as HTMLCanvasElement;
+    const game = new PinballGame(canvas, events, 'living-earth');
+
+    expect(game.track).toBe('living-earth');
+    expect(game.lanes.map((lane) => lane.ch).join('')).toBe('TERRA');
+    expect(game.bumpers).toHaveLength(5);
+    expect(game.ramps[0]?.label).toBe('ÓRBITA AZUL');
+    expect(game.ramps[1]?.label).toBe('CORRENTE OCEÂNICA');
   });
 });

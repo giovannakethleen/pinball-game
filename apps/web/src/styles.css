@@ -1,9 +1,16 @@
 /* You can add global styles to this file, and also import other style files */
 html,
 body {
+  width: 100%;
   min-width: 320px;
   min-height: 100%;
   margin: 0;
+}
+
+app-root {
+  display: block;
+  width: 100%;
+  min-width: 0;
 }
 
 body {
@@ -19,4 +26,100 @@ input {
 
 * {
   box-sizing: border-box;
+}
+
+@media (max-width: 400px) {
+  .cosmos {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .home-panel {
+    width: 100%;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .home-panel .planet {
+    font-size: 2.5rem;
+  }
+
+  .home-title {
+    font-size: clamp(2rem, 10vw, 2.5rem);
+  }
+
+  .track-option {
+    min-height: 3.5rem;
+    padding: 0.5rem 0.65rem;
+  }
+
+  .home-panel > .button {
+    min-height: 2.5rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .home-details {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 400px) and (max-height: 700px) {
+  .cosmos.home {
+    align-items: flex-start;
+    padding-block: 0.25rem;
+  }
+
+  .home-panel {
+    gap: 0.35rem;
+    margin-block: auto;
+    padding: 0.5rem;
+  }
+
+  .home-panel .planet {
+    font-size: 2rem;
+  }
+
+  .home-title {
+    font-size: 2rem;
+  }
+
+  .home-panel > p {
+    font-size: 0.8rem;
+    line-height: 1.15;
+  }
+
+  .track-picker,
+  .track-options {
+    gap: 0.25rem;
+  }
+
+  .track-option {
+    min-height: 2.75rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.85rem;
+    line-height: 1.1;
+  }
+
+  .track-option small {
+    font-size: 0.7rem;
+  }
+
+  .home-panel > .button {
+    min-height: 2.25rem;
+    padding-block: 0.35rem;
+  }
+
+  .home-details {
+    padding: 0.35rem;
+  }
+
+  .home-preferences {
+    gap: 0.35rem;
+    padding-top: 0.35rem;
+  }
+
+  .record-badge {
+    padding: 0.3rem 0.45rem;
+    font-size: 0.7rem;
+  }
 }

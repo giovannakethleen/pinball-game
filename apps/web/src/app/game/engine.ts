@@ -1,7 +1,7 @@
 // Pinball engine: physics + rendering, independent from React.
 export const W = 400;
 export const H = 720;
-export type TrackId = "orbit" | "crystal-garden";
+export type TrackId = "orbit" | "mars-nebula" | "living-earth";
 const R = 8;
 const G = 900;
 const DT = 1 / 240;
@@ -44,16 +44,27 @@ type Palette = {
   flipper: string;
   ball: readonly [string, string, string];
 };
-const CRYSTAL_COLORS: Palette = {
-  wall: "#a5f3fc",
-  glow: "#22d3ee",
-  accentGate: "#a3e635",
-  planet: ["#67e8f9", "#0e7490"],
-  moon: ["#d9f99d", "#65a30d"],
-  star: "#ecfeff",
-  starOff: "#397887",
-  flipper: "#a5f3fc",
-  ball: ["#ffffff", "#a5f3fc", "#0891b2"],
+const MARS_COLORS: Palette = {
+  wall: "#fed7aa",
+  glow: "#fb923c",
+  accentGate: "#f43f5e",
+  planet: ["#fdba74", "#c2410c"],
+  moon: ["#fda4af", "#9f1239"],
+  star: "#fef08a",
+  starOff: "#7f3b32",
+  flipper: "#fdba74",
+  ball: ["#fff7ed", "#fb923c", "#9a3412"],
+};
+const EARTH_COLORS: Palette = {
+  wall: "#a7f3d0",
+  glow: "#38bdf8",
+  accentGate: "#34d399",
+  planet: ["#7dd3fc", "#0369a1"],
+  moon: ["#86efac", "#15803d"],
+  star: "#fef08a",
+  starOff: "#1e5b69",
+  flipper: "#a7f3d0",
+  ball: ["#ffffff", "#7dd3fc", "#0369a1"],
 };
 
 const segs: Seg[] = [
@@ -133,28 +144,48 @@ export class PinballGame {
     this.ctx = canvas.getContext("2d")!;
     this.ev = ev;
     this.track = track;
-    this.palette = track === "crystal-garden" ? CRYSTAL_COLORS : COLORS;
-    if (track === "crystal-garden") {
+    this.palette = track === "mars-nebula" ? MARS_COLORS : track === "living-earth" ? EARTH_COLORS : COLORS;
+    if (track === "mars-nebula") {
       this.ramps = [
-        { path: [[48, 445], [35, 335], [48, 245], [82, 175], [130, 130], [190, 115]], pts: 1200, color: "rgba(34,211,238,0.5)", label: "CASCATA DE CRISTAIS", dur: 0.95 },
-        { path: [[326, 350], [350, 280], [338, 210], [310, 145], [270, 128], [245, 220], [260, 340], [290, 455], [278, 550]], pts: 1800, color: "rgba(163,230,53,0.45)", label: "PORTAL AURORA", dur: 1.15 },
+        { path: [[48, 445], [35, 345], [55, 260], [95, 195], [145, 145], [195, 118]], pts: 1300, color: "rgba(251,146,60,0.5)", label: "DESFILADEIRO DE MARTE", dur: 0.95 },
+        { path: [[326, 350], [350, 275], [335, 205], [305, 155], [270, 180], [250, 275], [280, 385], [300, 490], [278, 555]], pts: 1900, color: "rgba(244,63,94,0.45)", label: "PORTAL DA NEBULOSA", dur: 1.15 },
       ];
-      this.holes = [{ x: 200, y: 505 }, { x: 200, y: 34 }];
-      this.lanes = "AURORA".split("").map((ch, i) => ({ x: 110 + i * 36, ch, lit: false }));
-      this.comet = { x: 200, dir: -1, cd: 0, y: 270 };
+      this.lanes = "MARTE".split("").map((ch, i) => ({ x: 128 + i * 36, ch, lit: false }));
+      this.comet = { x: 200, dir: 1, cd: 0, y: 265 };
       this.bumpers = [
-        { x: 200, y: 145, r: 27, pts: 300, hit: 0, kind: "planet" },
-        { x: 112, y: 230, r: 21, pts: 125, hit: 0, kind: "moon" },
-        { x: 288, y: 230, r: 21, pts: 125, hit: 0, kind: "moon" },
-        { x: 150, y: 330, r: 23, pts: 200, hit: 0, kind: "planet" },
-        { x: 250, y: 330, r: 23, pts: 200, hit: 0, kind: "planet" },
+        { x: 200, y: 145, r: 29, pts: 300, hit: 0, kind: "planet" },
+        { x: 115, y: 235, r: 23, pts: 125, hit: 0, kind: "moon" },
+        { x: 285, y: 235, r: 23, pts: 125, hit: 0, kind: "moon" },
+        { x: 155, y: 335, r: 22, pts: 200, hit: 0, kind: "planet" },
+        { x: 245, y: 335, r: 22, pts: 200, hit: 0, kind: "planet" },
       ];
       this.stars = [
         { x: 68, y: 155, lit: false, cd: 0 },
         { x: 332, y: 155, lit: false, cd: 0 },
         { x: 82, y: 390, lit: false, cd: 0 },
         { x: 318, y: 390, lit: false, cd: 0 },
-        { x: 200, y: 430, lit: false, cd: 0 },
+        { x: 200, y: 435, lit: false, cd: 0 },
+      ];
+    } else if (track === "living-earth") {
+      this.ramps = [
+        { path: [[48, 445], [35, 345], [55, 260], [95, 195], [145, 145], [195, 118]], pts: 1400, color: "rgba(56,189,248,0.5)", label: "ÓRBITA AZUL", dur: 0.95 },
+        { path: [[326, 350], [350, 275], [335, 205], [305, 155], [270, 180], [250, 275], [280, 385], [300, 490], [278, 555]], pts: 2000, color: "rgba(52,211,153,0.45)", label: "CORRENTE OCEÂNICA", dur: 1.15 },
+      ];
+      this.lanes = "TERRA".split("").map((ch, i) => ({ x: 128 + i * 36, ch, lit: false }));
+      this.comet = { x: 200, dir: 1, cd: 0, y: 265 };
+      this.bumpers = [
+        { x: 200, y: 145, r: 29, pts: 350, hit: 0, kind: "planet" },
+        { x: 115, y: 235, r: 23, pts: 150, hit: 0, kind: "moon" },
+        { x: 285, y: 235, r: 23, pts: 150, hit: 0, kind: "moon" },
+        { x: 155, y: 335, r: 22, pts: 225, hit: 0, kind: "planet" },
+        { x: 245, y: 335, r: 22, pts: 225, hit: 0, kind: "planet" },
+      ];
+      this.stars = [
+        { x: 68, y: 155, lit: false, cd: 0 },
+        { x: 332, y: 155, lit: false, cd: 0 },
+        { x: 82, y: 390, lit: false, cd: 0 },
+        { x: 318, y: 390, lit: false, cd: 0 },
+        { x: 200, y: 435, lit: false, cd: 0 },
       ];
     }
     for (let i = 0; i < 90; i++) this.bg.push({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 1.6 + 0.3, p: Math.random() * 6 });
@@ -300,7 +331,7 @@ export class PinballGame {
         this.pops.push({
           x: 200,
           y: 330,
-          t: this.track === "crystal-garden" ? "PORTAL DE CRISTAL!" : "TELETRANSPORTE!",
+          t: this.track === "mars-nebula" ? "PORTAL DA NEBULOSA!" : this.track === "living-earth" ? "CORRENTE OCEÂNICA!" : "TELETRANSPORTE!",
           life: 1.2,
         });
       }
@@ -317,8 +348,8 @@ export class PinballGame {
     if (cm.x > 300 || cm.x < 100) cm.dir *= -1;
     if (cm.cd <= 0 && Math.hypot(this.bx - cm.x, this.by - cm.y) < R + 12) {
       cm.cd = 0.6; this.vy = -Math.abs(this.vy) - 200;
-      this.addScore(750, cm.x, cm.y - 18); this.burst(cm.x, cm.y, this.track === "crystal-garden" ? this.palette.accentGate : "#7dd3fc", 24); this.ev.onSound("bonus");
-      this.pops.push({ x: cm.x, y: cm.y + 30, t: this.track === "crystal-garden" ? "LIBÉLULA!" : "COMETA!", life: 1 });
+      this.addScore(750, cm.x, cm.y - 18); this.burst(cm.x, cm.y, this.track === "orbit" ? "#7dd3fc" : this.palette.accentGate, 24); this.ev.onSound("bonus");
+      this.pops.push({ x: cm.x, y: cm.y + 30, t: this.track === "mars-nebula" ? "METEORO!" : this.track === "living-earth" ? "SATÉLITE!" : "COMETA!", life: 1 });
     }
     // top lanes
     this.laneCd = Math.max(0, this.laneCd - dt);
@@ -327,7 +358,7 @@ export class PinballGame {
       if (ln && !ln.lit) { ln.lit = true; this.laneCd = 0.3; this.addScore(300, ln.x, 100); this.ev.onSound("star"); }
       if (this.lanes.every((l) => l.lit)) {
         this.lanes.forEach((l) => (l.lit = false));
-        const message = this.track === "crystal-garden" ? "AURORA COMPLETA!" : "ASTRO COMPLETO!";
+        const message = this.track === "mars-nebula" ? "MARTE COMPLETO!" : this.track === "living-earth" ? "TERRA COMPLETA!" : "ASTRO COMPLETO!";
         this.addScore(5000, 200, 110); this.pops.push({ x: 200, y: 330, t: message, life: 1.4 });
         this.burst(200, 70, this.palette.star, 40); this.ev.onSound("bonus");
       }
@@ -417,31 +448,36 @@ export class PinballGame {
   draw() {
     const c = this.ctx;
     const g = c.createRadialGradient(200, 260, 20, 200, 360, 520);
-    if (this.track === "crystal-garden") {
-      g.addColorStop(0, "#164e63"); g.addColorStop(0.5, "#083344"); g.addColorStop(1, "#04131f");
+    if (this.track === "mars-nebula") {
+      g.addColorStop(0, "#7c2d12"); g.addColorStop(0.5, "#431407"); g.addColorStop(1, "#1c0a0a");
+    } else if (this.track === "living-earth") {
+      g.addColorStop(0, "#075985"); g.addColorStop(0.5, "#082f49"); g.addColorStop(1, "#04131f");
     } else {
       g.addColorStop(0, "#4c1d95"); g.addColorStop(0.5, "#2e1065"); g.addColorStop(1, "#12052b");
     }
     c.fillStyle = g; c.fillRect(0, 0, W, H);
     // nebula
     const n = c.createRadialGradient(90, 470, 0, 90, 470, 160);
-    n.addColorStop(0, this.track === "crystal-garden" ? "rgba(34,211,238,0.25)" : "rgba(244,114,182,0.25)");
-    n.addColorStop(1, this.track === "crystal-garden" ? "rgba(34,211,238,0)" : "rgba(244,114,182,0)");
+    const nebula = this.track === "mars-nebula" ? "251,146,60" : this.track === "living-earth" ? "52,211,153" : "244,114,182";
+    n.addColorStop(0, `rgba(${nebula},0.25)`);
+    n.addColorStop(1, `rgba(${nebula},0)`);
     c.fillStyle = n; c.fillRect(0, 0, W, H);
-    if (this.track === "crystal-garden") this.drawCrystals();
+    if (this.track === "living-earth") this.drawEarthBackdrop();
     for (const s of this.bg) {
       c.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(this.t * 2 + s.p));
       c.fillStyle = "#fff"; c.beginPath(); c.arc(s.x, s.y, s.s, 0, 7); c.fill();
     }
     c.globalAlpha = 1;
     // orbit ring
-    c.strokeStyle = this.track === "crystal-garden" ? "rgba(165,243,252,0.2)" : "rgba(216,180,254,0.25)"; c.lineWidth = 1.5; c.setLineDash([4, 6]);
+    c.strokeStyle = this.track === "mars-nebula" ? "rgba(253,186,116,0.2)" : this.track === "living-earth" ? "rgba(125,211,252,0.24)" : "rgba(216,180,254,0.25)"; c.lineWidth = 1.5; c.setLineDash([4, 6]);
     c.beginPath(); c.ellipse(200, 230, 130, 70, 0, 0, 7); c.stroke(); c.setLineDash([]);
 
     this.glowStroke(() => { for (const s of segs) { c.beginPath(); c.moveTo(s.ax, s.ay); c.lineTo(s.bx, s.by); c.stroke(); } }, this.palette.wall, 4);
 
-    if (this.track === "crystal-garden") {
-      this.drawCrystalPortals();
+    if (this.track === "mars-nebula") {
+      this.drawMarsCraterPortals();
+    } else if (this.track === "living-earth") {
+      this.drawEarthPortals();
     } else {
       for (const h of this.holes) {
         for (let i = 5; i > 0; i--) {
@@ -460,8 +496,10 @@ export class PinballGame {
       c.fillStyle = l.lit ? this.palette.star : "rgba(255,255,255,0.3)"; c.shadowColor = this.palette.star; c.shadowBlur = l.lit ? 16 : 0;
       c.fillText(l.ch, l.x, 76); c.shadowBlur = 0;
     }
-    if (this.track === "crystal-garden") {
-      this.drawCrystalDragonfly();
+    if (this.track === "mars-nebula") {
+      this.drawMeteor();
+    } else if (this.track === "living-earth") {
+      this.drawSatellite();
     } else {
       const cm = this.comet;
       const tail = c.createLinearGradient(cm.x - cm.dir * 40, cm.y, cm.x, cm.y);
@@ -476,16 +514,15 @@ export class PinballGame {
       const rp = rm.path;
       if (ri === 1) {
         // wormhole: dark tube with spinning rings
-        c.strokeStyle = this.track === "crystal-garden" ? "rgba(8,78,93,0.9)" : "rgba(30,6,54,0.85)"; c.lineWidth = 30;
+        c.strokeStyle = this.track === "mars-nebula" ? "rgba(67,20,7,0.9)" : this.track === "living-earth" ? "rgba(8,47,73,0.9)" : "rgba(30,6,54,0.85)"; c.lineWidth = 30;
         c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke();
         this.glowStroke(() => { c.lineWidth = 2; c.beginPath(); rp.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.stroke(); }, this.palette.accentGate, 2);
         for (let i = 0; i < rp.length - 1; i++) {
           const [x0, y0] = rp[i]!, [x1, y1] = rp[i + 1]!;
           const k = (this.t * 0.8 + i * 0.37) % 1;
           const x = x0 + (x1 - x0) * k, y = y0 + (y1 - y0) * k;
-          c.strokeStyle = this.track === "crystal-garden"
-            ? `rgba(${i % 2 ? "163,230,53" : "103,232,249"},${0.9 - k * 0.5})`
-            : `rgba(244,114,182,${0.9 - k * 0.5})`;
+          const ringColor = this.track === "mars-nebula" ? "251,146,60" : this.track === "living-earth" ? "52,211,153" : "244,114,182";
+          c.strokeStyle = `rgba(${ringColor},${0.9 - k * 0.5})`;
           c.lineWidth = 2;
           c.beginPath(); c.ellipse(x, y, 14, 6, Math.atan2(y1 - y0, x1 - x0) + Math.PI / 2, 0, 7); c.stroke();
         }
@@ -542,113 +579,171 @@ export class PinballGame {
     c.globalAlpha = 1;
   }
 
-  private drawCrystals() {
+  private drawEarthBackdrop() {
     const c = this.ctx;
-    for (const [x, y, size] of [[34, 275, 30], [365, 315, 34], [38, 575, 24], [360, 585, 27]] as const) {
-      c.save();
-      c.translate(x, y);
-      c.globalAlpha = 0.5;
-      c.fillStyle = this.palette.glow;
-      c.shadowColor = this.palette.glow;
-      c.shadowBlur = 18;
-      c.beginPath();
-      c.moveTo(0, -size);
-      c.lineTo(size * 0.48, -size * 0.18);
-      c.lineTo(size * 0.3, size);
-      c.lineTo(-size * 0.35, size * 0.72);
-      c.lineTo(-size * 0.5, -size * 0.2);
-      c.closePath();
-      c.fill();
-      c.globalAlpha = 0.65;
-      c.strokeStyle = "#ecfeff";
-      c.lineWidth = 1;
-      c.beginPath();
-      c.moveTo(0, -size);
-      c.lineTo(0, size * 0.75);
-      c.lineTo(size * 0.48, -size * 0.18);
-      c.moveTo(0, size * 0.75);
-      c.lineTo(-size * 0.5, -size * 0.2);
-      c.stroke();
-      c.restore();
-    }
+    c.save();
+    c.globalAlpha = 0.42;
+    c.shadowColor = "#38bdf8";
+    c.shadowBlur = 28;
+    c.fillStyle = "#38bdf8";
+    c.beginPath();
+    c.arc(200, 290, 64, 0, Math.PI * 2);
+    c.fill();
+    c.shadowBlur = 0;
+    c.save();
+    c.beginPath();
+    c.arc(200, 290, 59, 0, Math.PI * 2);
+    c.clip();
+    const ocean = c.createLinearGradient(145, 245, 250, 345);
+    ocean.addColorStop(0, "#38bdf8");
+    ocean.addColorStop(0.55, "#0369a1");
+    ocean.addColorStop(1, "#082f49");
+    c.fillStyle = ocean;
+    c.fillRect(135, 225, 130, 130);
+    c.fillStyle = "#4ade80";
+    c.beginPath();
+    c.moveTo(158, 252); c.lineTo(174, 243); c.lineTo(189, 250); c.lineTo(190, 263);
+    c.lineTo(181, 271); c.lineTo(184, 284); c.lineTo(174, 294); c.lineTo(168, 281);
+    c.lineTo(157, 276); c.lineTo(150, 263); c.closePath(); c.fill();
+    c.beginPath();
+    c.moveTo(205, 251); c.lineTo(221, 248); c.lineTo(232, 257); c.lineTo(246, 260);
+    c.lineTo(251, 273); c.lineTo(241, 280); c.lineTo(230, 276); c.lineTo(224, 289);
+    c.lineTo(211, 287); c.lineTo(205, 275); c.lineTo(195, 270); c.closePath(); c.fill();
+    c.beginPath();
+    c.moveTo(211, 292); c.lineTo(224, 297); c.lineTo(229, 310); c.lineTo(223, 323);
+    c.lineTo(218, 340); c.lineTo(208, 331); c.lineTo(205, 316); c.lineTo(199, 306); c.closePath(); c.fill();
+    c.strokeStyle = "rgba(224,242,254,0.55)";
+    c.lineWidth = 5;
+    c.beginPath(); c.ellipse(200, 280, 48, 13, -0.2, 3.4, 5.8); c.stroke();
+    c.beginPath(); c.ellipse(199, 300, 54, 8, 0.15, 0.2, 2.5); c.stroke();
+    c.restore();
+    c.globalAlpha = 0.55;
+    c.strokeStyle = "#bae6fd";
+    c.lineWidth = 1.5;
+    c.setLineDash([5, 5]);
+    c.beginPath();
+    c.ellipse(200, 290, 83, 24, -0.18, 0, Math.PI * 2);
+    c.stroke();
+    c.setLineDash([]);
+    c.restore();
   }
 
-  private drawCrystalPortals() {
+  private drawEarthPortals() {
     const c = this.ctx;
     for (const [index, portal] of this.holes.entries()) {
-      const radius = portal.y < 100 ? 16 : 20;
+      const radius = portal.y < 100 ? 15 : 19;
       c.save();
       c.translate(portal.x, portal.y);
+      c.rotate(this.t * (index ? -1 : 1));
       c.shadowColor = this.palette.glow;
       c.shadowBlur = 20;
       for (let ring = 0; ring < 3; ring++) {
-        c.strokeStyle = ring === 1 ? "rgba(163,230,53,0.8)" : "rgba(103,232,249,0.78)";
+        c.strokeStyle = ring === 1 ? "rgba(52,211,153,0.85)" : "rgba(56,189,248,0.8)";
         c.lineWidth = ring === 1 ? 2 : 3;
         c.beginPath();
-        c.ellipse(0, 0, radius + ring * 5, radius * 0.52 + ring * 2, 0, this.t * (index ? -1 : 1) + ring, this.t * (index ? -1 : 1) + ring + Math.PI * 1.65);
+        c.ellipse(0, 0, radius + ring * 5, radius * 0.55 + ring * 2, 0, ring, Math.PI * 1.7 + ring);
         c.stroke();
       }
       const center = c.createRadialGradient(-3, -3, 1, 0, 0, radius * 0.7);
       center.addColorStop(0, "#ecfeff");
-      center.addColorStop(0.35, "#67e8f9");
-      center.addColorStop(1, "#0e7490");
+      center.addColorStop(0.35, "#38bdf8");
+      center.addColorStop(1, "#075985");
       c.fillStyle = center;
       c.beginPath();
       c.arc(0, 0, radius * 0.52, 0, Math.PI * 2);
-      c.fill();
-      c.fillStyle = "#f0fdfa";
-      c.beginPath();
-      c.arc(Math.cos(this.t * 3 + index * Math.PI) * radius * 0.72, Math.sin(this.t * 3 + index * Math.PI) * radius * 0.4, 2.5, 0, Math.PI * 2);
       c.fill();
       c.restore();
     }
   }
 
-  private drawCrystalDragonfly() {
+  private drawSatellite() {
     const c = this.ctx;
     const { x, y, cd } = this.comet;
-    const wingbeat = Math.sin(this.t * 18) * 5;
     c.save();
     c.translate(x, y);
-    c.rotate(this.comet.dir < 0 ? Math.PI : 0);
-    c.scale(1.4, 1.4);
-    c.globalAlpha = cd > 0 ? 0.45 : 1;
+    c.rotate(this.t * 0.5);
+    c.globalAlpha = cd > 0 ? 0.5 : 1;
     c.shadowColor = this.palette.glow;
-    c.shadowBlur = cd > 0 ? 8 : 24;
-    for (const side of [-1, 1]) {
-      for (const offset of [-4, 3]) {
-        const spread = 17 + wingbeat * side;
-        c.fillStyle = side < 0 ? "rgba(165,243,252,0.82)" : "rgba(103,232,249,0.68)";
+    c.shadowBlur = 16;
+    c.fillStyle = "#38bdf8";
+    c.fillRect(-17, -6, 10, 12);
+    c.fillRect(7, -6, 10, 12);
+    c.fillStyle = "#e0f2fe";
+    c.fillRect(-6, -7, 12, 14);
+    c.strokeStyle = "#a7f3d0";
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(0, -7);
+    c.lineTo(0, -14);
+    c.lineTo(6, -18);
+    c.stroke();
+    c.beginPath();
+    c.arc(7, -18, 2, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+  }
+
+  private drawMarsCraterPortals() {
+    const c = this.ctx;
+    for (const [index, crater] of this.holes.entries()) {
+      const radius = crater.y < 100 ? 15 : 19;
+      c.save();
+      c.translate(crater.x, crater.y);
+      c.rotate(this.t * (index ? -1 : 1));
+      c.shadowColor = this.palette.glow;
+      c.shadowBlur = 18;
+      for (let ring = 0; ring < 3; ring++) {
+        c.strokeStyle = ring === 1 ? "rgba(244,63,94,0.8)" : "rgba(251,146,60,0.78)";
+        c.lineWidth = ring === 1 ? 2 : 3;
         c.beginPath();
-        c.moveTo(offset, 0);
-        c.quadraticCurveTo(offset - 1, side * spread, offset - 18, side * (spread + 5));
-        c.quadraticCurveTo(offset - 13, side * 2, offset, 0);
-        c.fill();
-        c.strokeStyle = "rgba(236,254,255,0.9)";
-        c.lineWidth = 1;
-        c.beginPath();
-        c.moveTo(offset, 0);
-        c.lineTo(offset - 14, side * (spread + 3));
+        c.ellipse(0, 0, radius + ring * 5, radius * 0.55 + ring * 2, 0, ring, Math.PI * 1.7 + ring);
         c.stroke();
       }
-    }
-    c.fillStyle = "#a3e635";
-    c.beginPath();
-    c.ellipse(0, 0, 16, 4, 0, 0, Math.PI * 2);
-    c.fill();
-    c.fillStyle = "#ecfeff";
-    c.beginPath();
-    c.arc(14, 0, 5, 0, Math.PI * 2);
-    c.fill();
-    for (let segment = 0; segment < 3; segment++) {
-      c.fillStyle = segment % 2 ? "#67e8f9" : "#a3e635";
+      const center = c.createRadialGradient(-3, -3, 1, 0, 0, radius * 0.7);
+      center.addColorStop(0, "#fef3c7");
+      center.addColorStop(0.35, "#fb923c");
+      center.addColorStop(1, "#7c2d12");
+      c.fillStyle = center;
       c.beginPath();
-      c.arc(-13 - segment * 5, 0, 2.5 - segment * 0.4, 0, Math.PI * 2);
+      c.arc(0, 0, radius * 0.52, 0, Math.PI * 2);
       c.fill();
+      c.restore();
     }
-    c.fillStyle = "#164e63";
+  }
+
+  private drawMeteor() {
+    const c = this.ctx;
+    const { x, y, dir, cd } = this.comet;
+    const tail = c.createLinearGradient(x - dir * 42, y, x, y);
+    tail.addColorStop(0, "rgba(251,146,60,0)");
+    tail.addColorStop(1, "rgba(251,146,60,0.85)");
+    c.strokeStyle = tail;
+    c.lineWidth = 12;
     c.beginPath();
-    c.arc(15.5, -1.5, 1, 0, Math.PI * 2);
+    c.moveTo(x - dir * 42, y);
+    c.lineTo(x, y);
+    c.stroke();
+    c.save();
+    c.translate(x, y);
+    c.rotate(this.t * 2 * dir);
+    c.globalAlpha = cd > 0 ? 0.55 : 1;
+    c.fillStyle = "#fb923c";
+    c.shadowColor = "#f43f5e";
+    c.shadowBlur = cd > 0 ? 8 : 22;
+    c.beginPath();
+    for (let corner = 0; corner < 8; corner++) {
+      const angle = (corner * Math.PI) / 4;
+      const radius = corner % 2 ? 6 : 10;
+      const px = Math.cos(angle) * radius;
+      const py = Math.sin(angle) * radius;
+      if (corner === 0) c.moveTo(px, py);
+      else c.lineTo(px, py);
+    }
+    c.closePath();
+    c.fill();
+    c.fillStyle = "#fff7ed";
+    c.beginPath();
+    c.arc(-2, -2, 2.5, 0, Math.PI * 2);
     c.fill();
     c.restore();
   }
