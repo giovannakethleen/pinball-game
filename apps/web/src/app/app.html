@@ -74,14 +74,16 @@
 
   <section class="game-layout" [hidden]="screen() !== 'game'">
     <aside class="panel game-panel">
-      <h2 class="title game-title">Cosmic Pinball</h2>
-      <div class="score-box">{{ score().toString().padStart(7, '0') }}</div>
+      <div class="game-heading">
+        <h2 class="title game-title">Cosmic Pinball</h2>
+        <div class="score-row">
+          <div class="score-box">{{ score().toString().padStart(7, '0') }}</div>
+          <div class="stat record-stat">Recorde: <b class="star-text">{{ displayedRecord.toLocaleString() }}</b></div>
+        </div>
+      </div>
       <div class="stats-grid">
         <div class="stat hud-stat"><span>Bolas</span><b class="stat-value">{{ remainingBalls }}</b></div>
         <div class="stat hud-stat"><span>Multiplicador</span><b class="stat-value star-text">x{{ multiplier() }}</b></div>
-      </div>
-      <div class="hud-footer">
-        <div class="stat record-stat">Recorde: <b class="star-text">{{ displayedRecord.toLocaleString() }}</b></div>
         <button class="button button-ghost pause-button" type="button" (click)="togglePause()">
           {{ paused() ? '▶ Continuar' : '⏸ Pausar' }}
         </button>
@@ -105,41 +107,41 @@
             <button class="button button-ghost" type="button" (click)="setScreen('home')">Sair</button>
           </div>
         }
-      </div>
-      <div class="touch-controls" aria-label="Controles do jogo">
-        <button
-          class="button button-ghost touch-flipper"
-          [class.pressed]="flipperPressed(0)()"
-          [attr.aria-pressed]="flipperPressed(0)()"
-          type="button"
-          aria-label="Palheta esquerda; segure para acionar"
-          (pointerdown)="startFlipper(0, $event)"
-          (pointerup)="flip(0, false)"
-          (pointercancel)="flip(0, false)"
-          (lostpointercapture)="flip(0, false)"
-        ><span aria-hidden="true">◀</span><small>Esquerda</small></button>
-        <button
-          class="button button-cosmic touch-launch"
-          [class.pressed]="launcherPressed()"
-          [attr.aria-pressed]="launcherPressed()"
-          type="button"
-          aria-label="Lançar a bola; segure para carregar e solte para lançar"
-          (pointerdown)="startCharging($event)"
-          (pointerup)="setCharging(false)"
-          (pointercancel)="cancelCharging()"
-          (lostpointercapture)="cancelCharging()"
-        >Lançar</button>
-        <button
-          class="button button-ghost touch-flipper"
-          [class.pressed]="flipperPressed(1)()"
-          [attr.aria-pressed]="flipperPressed(1)()"
-          type="button"
-          aria-label="Palheta direita; segure para acionar"
-          (pointerdown)="startFlipper(1, $event)"
-          (pointerup)="flip(1, false)"
-          (pointercancel)="flip(1, false)"
-          (lostpointercapture)="flip(1, false)"
-        ><span aria-hidden="true">▶</span><small>Direita</small></button>
+        <div class="touch-controls" aria-label="Controles do jogo" [hidden]="paused()">
+          <button
+            class="button button-ghost touch-flipper"
+            [class.pressed]="flipperPressed(0)()"
+            [attr.aria-pressed]="flipperPressed(0)()"
+            type="button"
+            aria-label="Palheta esquerda; segure para acionar"
+            (pointerdown)="startFlipper(0, $event)"
+            (pointerup)="flip(0, false)"
+            (pointercancel)="flip(0, false)"
+            (lostpointercapture)="flip(0, false)"
+          ><span aria-hidden="true">◀</span><small>Esquerda</small></button>
+          <button
+            class="button button-cosmic touch-launch"
+            [class.pressed]="launcherPressed()"
+            [attr.aria-pressed]="launcherPressed()"
+            type="button"
+            aria-label="Lançar a bola; segure para carregar e solte para lançar"
+            (pointerdown)="startCharging($event)"
+            (pointerup)="setCharging(false)"
+            (pointercancel)="cancelCharging()"
+            (lostpointercapture)="cancelCharging()"
+          >Lançar</button>
+          <button
+            class="button button-ghost touch-flipper"
+            [class.pressed]="flipperPressed(1)()"
+            [attr.aria-pressed]="flipperPressed(1)()"
+            type="button"
+            aria-label="Palheta direita; segure para acionar"
+            (pointerdown)="startFlipper(1, $event)"
+            (pointerup)="flip(1, false)"
+            (pointercancel)="flip(1, false)"
+            (lostpointercapture)="flip(1, false)"
+          ><span aria-hidden="true">▶</span><small>Direita</small></button>
+        </div>
       </div>
     </div>
   </section>
