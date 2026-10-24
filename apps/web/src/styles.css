@@ -131,18 +131,6 @@ input {
 }
 
 @media (max-width: 700px) {
-  app-root > main.cosmos.playing[class] {
-    align-items: flex-start;
-  }
-
-  app-root > main.cosmos.playing[class] > .game-layout {
-    height: calc(100% - 4rem);
-  }
-
-  .cosmos.playing .playfield {
-    display: block;
-  }
-
   .cosmos.playing .canvas-wrap .touch-controls {
     position: absolute;
     inset: 0;
@@ -167,13 +155,13 @@ input {
 
   main.cosmos.playing .canvas-wrap .touch-controls .touch-flipper:first-child {
     bottom: 0.4rem;
-    left: 0.4rem;
+    left: calc(50% - 5.75rem);
     width: 3.5rem;
   }
 
   main.cosmos.playing .canvas-wrap .touch-controls .touch-flipper:last-child {
-    right: 0.4rem;
     bottom: 0.4rem;
+    left: calc(50% + 2.25rem);
     width: 3.5rem;
   }
 

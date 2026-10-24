@@ -521,7 +521,7 @@ input:focus-visible {
     height: 100vh;
     height: 100svh;
     overflow: hidden;
-    padding: 0.5rem;
+    padding: 0.5rem 0.5rem 4.5rem;
   }
 
   .game-layout {
