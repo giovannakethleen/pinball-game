@@ -123,3 +123,13 @@ input {
     font-size: 0.7rem;
   }
 }
+
+@media (max-width: 700px) {
+  app-root > main.cosmos.playing[class] {
+    align-items: flex-start;
+  }
+
+  app-root > main.cosmos.playing[class] > .game-layout {
+    height: calc(100% - 4rem);
+  }
+}

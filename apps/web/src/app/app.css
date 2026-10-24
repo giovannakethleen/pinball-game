@@ -519,7 +519,7 @@ input:focus-visible {
 
   .cosmos.playing {
     height: 100vh;
-    height: 100dvh;
+    height: 100svh;
     overflow: hidden;
     padding: 0.5rem;
   }
@@ -529,7 +529,8 @@ input:focus-visible {
     grid-template-rows: auto minmax(0, 1fr);
     align-items: stretch;
     gap: 0.45rem;
-    height: calc(100dvh - 1rem);
+    height: 100%;
+    min-height: 0;
   }
 
   .game-panel {
@@ -588,10 +589,6 @@ input:focus-visible {
 }
 
 @media (max-width: 360px) {
-  .game-panel {
-    padding: 0.75rem;
-  }
-
   .touch-controls .button {
     min-height: 3.5rem;
   }
